@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clj.mapper.UserMapper">
+
+    <resultMap id="BaseResultMap" type="com.clj.domain.User">
+            <id property="userId" column="user_id" />
+            <result property="username" column="username" />
+            <result property="password" column="password" />
+            <result property="name" column="name" />
+            <result property="role" column="role" />
+            <result property="phone" column="phone" />
+            <result property="email" column="email" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        user_id,username,password,name,role,phone,
+        email
+    </sql>
+</mapper>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clj.mapper.LandMapper">
+
+    <resultMap id="BaseResultMap" type="com.clj.domain.Land">
+            <id property="landId" column="land_id" />
+            <result property="landName" column="land_name" />
+            <result property="location" column="location" />
+            <result property="area" column="area" />
+            <result property="soilType" column="soil_type" />
+            <result property="status" column="status" />
+            <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        land_id,land_name,location,area,soil_type,status,
+        create_time
+    </sql>
+</mapper>

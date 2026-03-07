@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clj.mapper.ProcessingRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.clj.domain.ProcessingRecord">
+            <id property="processingId" column="processing_id" />
+            <result property="matureCropId" column="mature_crop_id" />
+            <result property="quantity" column="quantity" />
+            <result property="processingMethod" column="processing_method" />
+            <result property="description" column="description" />
+            <result property="startDate" column="start_date" />
+            <result property="endDate" column="end_date" />
+            <result property="status" column="status" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        processing_id,mature_crop_id,quantity,processing_method,description,start_date,
+        end_date,status
+    </sql>
+</mapper>

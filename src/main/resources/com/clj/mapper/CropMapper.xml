@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clj.mapper.CropMapper">
+
+    <resultMap id="BaseResultMap" type="com.clj.domain.Crop">
+            <id property="cropId" column="crop_id" />
+            <result property="cropName" column="crop_name" />
+            <result property="cropType" column="crop_type" />
+            <result property="growthCycle" column="growth_cycle" />
+            <result property="suitableTemperature" column="suitable_temperature" />
+            <result property="suitableHumidity" column="suitable_humidity" />
+            <result property="description" column="description" />
+            <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        crop_id,crop_name,crop_type,growth_cycle,suitable_temperature,suitable_humidity,
+        description,create_time
+    </sql>
+</mapper>

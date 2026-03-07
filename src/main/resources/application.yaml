@@ -1,0 +1,14 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: AgriculturalSystemApplication
+  datasource:
+    username: root
+    password: 123
+    url: jdbc:mysql://192.168.127.128:3306/smart_agriculture?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+logging:
+  level:
+    com.clj.mapper: debug
