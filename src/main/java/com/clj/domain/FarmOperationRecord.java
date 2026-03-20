@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.math.BigDecimal;
 import java.util.Date;
 import lombok.Data;
 
@@ -39,17 +38,17 @@ public class FarmOperationRecord {
     /**
      * 承包人农资ID
      */
-    private Long contractorMaterialId;
+    private Long materialId;
 
     /**
      * 用量
      */
-    private BigDecimal quantity;
+    private Integer quantity;
 
     /**
      * 操作责任人ID
      */
-    private Long operatorId;
+    private Long userId;
 
     /**
      * 操作时间
@@ -72,9 +71,9 @@ public class FarmOperationRecord {
             && (this.getRecordId() == null ? other.getRecordId() == null : this.getRecordId().equals(other.getRecordId()))
             && (this.getOperationType() == null ? other.getOperationType() == null : this.getOperationType().equals(other.getOperationType()))
             && (this.getDescription() == null ? other.getDescription() == null : this.getDescription().equals(other.getDescription()))
-            && (this.getContractorMaterialId() == null ? other.getContractorMaterialId() == null : this.getContractorMaterialId().equals(other.getContractorMaterialId()))
+            && (this.getMaterialId() == null ? other.getMaterialId() == null : this.getMaterialId().equals(other.getMaterialId()))
             && (this.getQuantity() == null ? other.getQuantity() == null : this.getQuantity().equals(other.getQuantity()))
-            && (this.getOperatorId() == null ? other.getOperatorId() == null : this.getOperatorId().equals(other.getOperatorId()))
+            && (this.getUserId() == null ? other.getUserId() == null : this.getUserId().equals(other.getUserId()))
             && (this.getOperationTime() == null ? other.getOperationTime() == null : this.getOperationTime().equals(other.getOperationTime()));
     }
 
@@ -86,9 +85,9 @@ public class FarmOperationRecord {
         result = prime * result + ((getRecordId() == null) ? 0 : getRecordId().hashCode());
         result = prime * result + ((getOperationType() == null) ? 0 : getOperationType().hashCode());
         result = prime * result + ((getDescription() == null) ? 0 : getDescription().hashCode());
-        result = prime * result + ((getContractorMaterialId() == null) ? 0 : getContractorMaterialId().hashCode());
+        result = prime * result + ((getMaterialId() == null) ? 0 : getMaterialId().hashCode());
         result = prime * result + ((getQuantity() == null) ? 0 : getQuantity().hashCode());
-        result = prime * result + ((getOperatorId() == null) ? 0 : getOperatorId().hashCode());
+        result = prime * result + ((getUserId() == null) ? 0 : getUserId().hashCode());
         result = prime * result + ((getOperationTime() == null) ? 0 : getOperationTime().hashCode());
         return result;
     }
@@ -103,9 +102,9 @@ public class FarmOperationRecord {
         sb.append(", recordId=").append(recordId);
         sb.append(", operationType=").append(operationType);
         sb.append(", description=").append(description);
-        sb.append(", contractorMaterialId=").append(contractorMaterialId);
+        sb.append(", materialId=").append(materialId);
         sb.append(", quantity=").append(quantity);
-        sb.append(", operatorId=").append(operatorId);
+        sb.append(", userId=").append(userId);
         sb.append(", operationTime=").append(operationTime);
         sb.append("]");
         return sb.toString();

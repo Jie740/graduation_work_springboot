@@ -2,6 +2,7 @@ package com.clj.service;
 
 import com.clj.domain.EquipmentType;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.utils.Result;
 
 /**
 * @author ajie
@@ -10,4 +11,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface EquipmentTypeService extends IService<EquipmentType> {
 
+    Result add(String equipmentTypeName);
+    Result delete(Long equipmentTypeId);
+    Result updateEquipmentType(EquipmentType equipmentType);
+    Result getEquipmentTypes();
 }

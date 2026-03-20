@@ -2,6 +2,10 @@ package com.clj.service;
 
 import com.clj.domain.EquipmentApply;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.domain.dto.EquipmentApplyDto;
+import com.clj.domain.vo.EquipmentApplyVo;
+import com.clj.domain.vo.MaterialApplyVo;
+import com.clj.utils.Result;
 
 /**
 * @author ajie
@@ -10,4 +14,19 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface EquipmentApplyService extends IService<EquipmentApply> {
 
+    Result add(EquipmentApplyDto equipmentApplyDto);
+
+    Result delete(Integer applyId);
+
+    Result updateApply(EquipmentApplyDto equipmentApplyDto);
+
+    Result getApplyByPage(Integer pageNum, Integer pageSize);
+
+    Result searchApplyByPage(String keyword, Integer pageNum, Integer pageSize);
+
+    Result updateApplyStatus(Long applyId, Integer status);
+
+    EquipmentApplyVo getApplyVoById(Long applyId);
+
+    Result getEquipmentNameAndTypeNameById(Long applyId);
 }

@@ -35,7 +35,7 @@ public class User {
     private String name;
 
     /**
-     * 角色（system_root、root、user）
+     * 角色（system_admin、enterprise_admin、user）
      */
     private String role;
 
@@ -48,6 +48,11 @@ public class User {
      * 邮箱
      */
     private String email;
+
+    /**
+     * 冻结（0）、正常（1）
+     */
+    private Integer status;
 
     @Override
     public boolean equals(Object that) {
@@ -67,7 +72,8 @@ public class User {
             && (this.getName() == null ? other.getName() == null : this.getName().equals(other.getName()))
             && (this.getRole() == null ? other.getRole() == null : this.getRole().equals(other.getRole()))
             && (this.getPhone() == null ? other.getPhone() == null : this.getPhone().equals(other.getPhone()))
-            && (this.getEmail() == null ? other.getEmail() == null : this.getEmail().equals(other.getEmail()));
+            && (this.getEmail() == null ? other.getEmail() == null : this.getEmail().equals(other.getEmail()))
+            && (this.getStatus() == null ? other.getStatus() == null : this.getStatus().equals(other.getStatus()));
     }
 
     @Override
@@ -81,6 +87,7 @@ public class User {
         result = prime * result + ((getRole() == null) ? 0 : getRole().hashCode());
         result = prime * result + ((getPhone() == null) ? 0 : getPhone().hashCode());
         result = prime * result + ((getEmail() == null) ? 0 : getEmail().hashCode());
+        result = prime * result + ((getStatus() == null) ? 0 : getStatus().hashCode());
         return result;
     }
 
@@ -97,6 +104,7 @@ public class User {
         sb.append(", role=").append(role);
         sb.append(", phone=").append(phone);
         sb.append(", email=").append(email);
+        sb.append(", status=").append(status);
         sb.append("]");
         return sb.toString();
     }

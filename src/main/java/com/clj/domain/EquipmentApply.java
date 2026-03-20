@@ -36,9 +36,9 @@ public class EquipmentApply {
     private Date applyTime;
 
     /**
-     * 状态
+     * 状态 0未审核 1已通过 2未通过
      */
-    private String status;
+    private Integer status;
 
     @Override
     public boolean equals(Object that) {

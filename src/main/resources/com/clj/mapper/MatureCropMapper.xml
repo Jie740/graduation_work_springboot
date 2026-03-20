@@ -8,12 +8,11 @@
             <id property="matureCropId" column="mature_crop_id" />
             <result property="recordId" column="record_id" />
             <result property="outputQuantity" column="output_quantity" />
-            <result property="remainingQuantity" column="remaining_quantity" />
             <result property="harvestTime" column="harvest_time" />
             <result property="createTime" column="create_time" />
     </resultMap>
 
     <sql id="Base_Column_List">
-        mature_crop_id,record_id,output_quantity,remaining_quantity,harvest_time,create_time
+        mature_crop_id,record_id,output_quantity,harvest_time,create_time
     </sql>
 </mapper>

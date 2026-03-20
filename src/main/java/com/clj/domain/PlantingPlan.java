@@ -32,6 +32,11 @@ public class PlantingPlan {
     private Long landId;
 
     /**
+     * 
+     */
+    private Long cropId;
+
+    /**
      * 创建人ID
      */
     private Long creatorId;
@@ -59,7 +64,7 @@ public class PlantingPlan {
     /**
      * 状态（未发布、执行中、调整中、已完成、已终止）
      */
-    private String status;
+    private Integer status;
 
     @Override
     public boolean equals(Object that) {
@@ -76,6 +81,7 @@ public class PlantingPlan {
         return (this.getPlanId() == null ? other.getPlanId() == null : this.getPlanId().equals(other.getPlanId()))
             && (this.getPlanName() == null ? other.getPlanName() == null : this.getPlanName().equals(other.getPlanName()))
             && (this.getLandId() == null ? other.getLandId() == null : this.getLandId().equals(other.getLandId()))
+            && (this.getCropId() == null ? other.getCropId() == null : this.getCropId().equals(other.getCropId()))
             && (this.getCreatorId() == null ? other.getCreatorId() == null : this.getCreatorId().equals(other.getCreatorId()))
             && (this.getExpectedOutput() == null ? other.getExpectedOutput() == null : this.getExpectedOutput().equals(other.getExpectedOutput()))
             && (this.getStartTime() == null ? other.getStartTime() == null : this.getStartTime().equals(other.getStartTime()))
@@ -91,6 +97,7 @@ public class PlantingPlan {
         result = prime * result + ((getPlanId() == null) ? 0 : getPlanId().hashCode());
         result = prime * result + ((getPlanName() == null) ? 0 : getPlanName().hashCode());
         result = prime * result + ((getLandId() == null) ? 0 : getLandId().hashCode());
+        result = prime * result + ((getCropId() == null) ? 0 : getCropId().hashCode());
         result = prime * result + ((getCreatorId() == null) ? 0 : getCreatorId().hashCode());
         result = prime * result + ((getExpectedOutput() == null) ? 0 : getExpectedOutput().hashCode());
         result = prime * result + ((getStartTime() == null) ? 0 : getStartTime().hashCode());
@@ -109,6 +116,7 @@ public class PlantingPlan {
         sb.append(", planId=").append(planId);
         sb.append(", planName=").append(planName);
         sb.append(", landId=").append(landId);
+        sb.append(", cropId=").append(cropId);
         sb.append(", creatorId=").append(creatorId);
         sb.append(", expectedOutput=").append(expectedOutput);
         sb.append(", startTime=").append(startTime);

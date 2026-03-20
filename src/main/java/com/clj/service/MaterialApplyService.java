@@ -2,6 +2,9 @@ package com.clj.service;
 
 import com.clj.domain.MaterialApply;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.domain.dto.MaterialApplyDto;
+import com.clj.domain.vo.MaterialApplyVo;
+import com.clj.utils.Result;
 
 /**
 * @author ajie
@@ -10,4 +13,17 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface MaterialApplyService extends IService<MaterialApply> {
 
+    Result getMaterialApplyByPage(Integer pageNum, Integer pageSize);
+
+    Result add(MaterialApplyDto materialApplyDto);
+
+    Result searchMaterialApplyByPage(String keyword, Integer pageNum, Integer pageSize);
+
+    Result delete(Long applyId);
+
+    Result updateMaterialApplyStatus(Long applyId, Integer status);
+
+    MaterialApplyVo getMaterialApplyVoById(Long applyId);
+
+    Result updateApply(MaterialApplyDto materialApplyDto);
 }

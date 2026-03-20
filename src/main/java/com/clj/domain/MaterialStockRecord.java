@@ -26,9 +26,9 @@ public class MaterialStockRecord {
     private Long materialId;
 
     /**
-     * 类型（入库、出库）
+     * 类型（0入库、1出库）
      */
-    private String type;
+    private Integer type;
 
     /**
      * 数量

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clj.domain.EquipmentRecord;
 import com.clj.service.EquipmentRecordService;
 import com.clj.mapper.EquipmentRecordMapper;
+import com.clj.utils.Result;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +16,10 @@ import org.springframework.stereotype.Service;
 public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMapper, EquipmentRecord>
     implements EquipmentRecordService{
 
+    @Override
+    public Result add(EquipmentRecord equipmentRecord) {
+        return this.save(equipmentRecord)? Result.ok() : Result.error("添加失败");
+    }
 }
 
 

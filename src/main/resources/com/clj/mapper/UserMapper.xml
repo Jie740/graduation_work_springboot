@@ -12,10 +12,11 @@
             <result property="role" column="role" />
             <result property="phone" column="phone" />
             <result property="email" column="email" />
+            <result property="status" column="status" />
     </resultMap>
 
     <sql id="Base_Column_List">
         user_id,username,password,name,role,phone,
-        email
+        email,status
     </sql>
 </mapper>

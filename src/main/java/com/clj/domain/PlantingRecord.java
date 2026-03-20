@@ -51,9 +51,9 @@ public class PlantingRecord {
     private Date actualHarvestDate;
 
     /**
-     * 状态
+     * 状态 0生长中 1已成熟
      */
-    private String status;
+    private Integer status;
 
     /**
      * 创建时间

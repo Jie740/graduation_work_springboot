@@ -32,11 +32,6 @@ public class MatureCrop {
     private BigDecimal outputQuantity;
 
     /**
-     * 剩余数量
-     */
-    private BigDecimal remainingQuantity;
-
-    /**
      * 收割时间
      */
     private Date harvestTime;
@@ -61,7 +56,6 @@ public class MatureCrop {
         return (this.getMatureCropId() == null ? other.getMatureCropId() == null : this.getMatureCropId().equals(other.getMatureCropId()))
             && (this.getRecordId() == null ? other.getRecordId() == null : this.getRecordId().equals(other.getRecordId()))
             && (this.getOutputQuantity() == null ? other.getOutputQuantity() == null : this.getOutputQuantity().equals(other.getOutputQuantity()))
-            && (this.getRemainingQuantity() == null ? other.getRemainingQuantity() == null : this.getRemainingQuantity().equals(other.getRemainingQuantity()))
             && (this.getHarvestTime() == null ? other.getHarvestTime() == null : this.getHarvestTime().equals(other.getHarvestTime()))
             && (this.getCreateTime() == null ? other.getCreateTime() == null : this.getCreateTime().equals(other.getCreateTime()));
     }
@@ -73,7 +67,6 @@ public class MatureCrop {
         result = prime * result + ((getMatureCropId() == null) ? 0 : getMatureCropId().hashCode());
         result = prime * result + ((getRecordId() == null) ? 0 : getRecordId().hashCode());
         result = prime * result + ((getOutputQuantity() == null) ? 0 : getOutputQuantity().hashCode());
-        result = prime * result + ((getRemainingQuantity() == null) ? 0 : getRemainingQuantity().hashCode());
         result = prime * result + ((getHarvestTime() == null) ? 0 : getHarvestTime().hashCode());
         result = prime * result + ((getCreateTime() == null) ? 0 : getCreateTime().hashCode());
         return result;
@@ -88,7 +81,6 @@ public class MatureCrop {
         sb.append(", matureCropId=").append(matureCropId);
         sb.append(", recordId=").append(recordId);
         sb.append(", outputQuantity=").append(outputQuantity);
-        sb.append(", remainingQuantity=").append(remainingQuantity);
         sb.append(", harvestTime=").append(harvestTime);
         sb.append(", createTime=").append(createTime);
         sb.append("]");

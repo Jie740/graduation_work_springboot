@@ -30,9 +30,9 @@ public class Equipment {
     private Long equipmentTypeId;
 
     /**
-     * 状态
+     * 状态 0正常闲置 1已被借用 2正在维修 3已损坏
      */
-    private String status;
+    private Integer status;
 
     @Override
     public boolean equals(Object that) {

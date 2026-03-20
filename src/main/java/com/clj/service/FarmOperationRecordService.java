@@ -2,6 +2,8 @@ package com.clj.service;
 
 import com.clj.domain.FarmOperationRecord;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.domain.dto.FarmOperationDto;
+import com.clj.utils.Result;
 
 /**
 * @author ajie
@@ -10,4 +12,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface FarmOperationRecordService extends IService<FarmOperationRecord> {
 
+    Result add(FarmOperationDto farmOperationDto);
+
+    Result getFarmOperationRecordById(Long recordId, Integer page, Integer size);
+
+    Result updateFamrOperation(FarmOperationDto farmOperationDto);
 }

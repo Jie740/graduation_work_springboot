@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clj.domain.ContractorMaterialStock;
 import com.clj.service.ContractorMaterialStockService;
 import com.clj.mapper.ContractorMaterialStockMapper;
+import com.clj.utils.Result;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +16,20 @@ import org.springframework.stereotype.Service;
 public class ContractorMaterialStockServiceImpl extends ServiceImpl<ContractorMaterialStockMapper, ContractorMaterialStock>
     implements ContractorMaterialStockService{
 
+    @Override
+    public Result add(ContractorMaterialStock contractorMaterialStock) {
+        ContractorMaterialStock one = this.lambdaQuery().eq(ContractorMaterialStock::getMaterialId, contractorMaterialStock.getMaterialId())
+                .eq(ContractorMaterialStock::getUserId, contractorMaterialStock.getUserId())
+                .one();
+        //增加库存
+        if (one != null){
+           return this.lambdaUpdate().eq(ContractorMaterialStock::getMaterialId, contractorMaterialStock.getMaterialId())
+                    .eq(ContractorMaterialStock::getUserId, contractorMaterialStock.getUserId())
+                    .set(ContractorMaterialStock::getStock, one.getStock()+contractorMaterialStock.getStock())
+                    .update()? Result.ok() : Result.error("保存失败");
+        }
+        return this.save(contractorMaterialStock)? Result.ok() : Result.error("保存失败");
+    }
 }
 
 

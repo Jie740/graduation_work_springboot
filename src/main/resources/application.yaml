@@ -1,14 +1,35 @@
 server:
   port: 8080
+
 spring:
   application:
     name: AgriculturalSystemApplication
+
   datasource:
     username: root
     password: 123
     url: jdbc:mysql://192.168.127.128:3306/smart_agriculture?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
+
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: 192.168.127.128
+      port: 6379
+      database: 1
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+mybatis-plus:
+  configuration:
+    # 开启驼峰命名转换：下划线命名自动转驼峰命名
+    map-underscore-to-camel-case: true
+
 logging:
   level:
     com.clj.mapper: debug

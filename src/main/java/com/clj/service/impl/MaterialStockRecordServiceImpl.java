@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clj.domain.MaterialStockRecord;
 import com.clj.service.MaterialStockRecordService;
 import com.clj.mapper.MaterialStockRecordMapper;
+import com.clj.utils.Result;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +16,10 @@ import org.springframework.stereotype.Service;
 public class MaterialStockRecordServiceImpl extends ServiceImpl<MaterialStockRecordMapper, MaterialStockRecord>
     implements MaterialStockRecordService{
 
+    @Override
+    public Result add(MaterialStockRecord materialStockRecord) {
+        return this.save(materialStockRecord)? Result.ok() : Result.error("添加失败");
+    }
 }
 
 

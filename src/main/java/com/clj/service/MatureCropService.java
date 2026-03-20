@@ -2,6 +2,7 @@ package com.clj.service;
 
 import com.clj.domain.MatureCrop;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.utils.Result;
 
 /**
 * @author ajie
@@ -10,4 +11,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface MatureCropService extends IService<MatureCrop> {
 
+    Result add(MatureCrop matureCrop);
+
+    Result getMatureCropsByPage(Integer pageNum, Integer pageSize);
 }

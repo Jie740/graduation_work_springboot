@@ -9,14 +9,14 @@
             <result property="recordId" column="record_id" />
             <result property="operationType" column="operation_type" />
             <result property="description" column="description" />
-            <result property="contractorMaterialId" column="contractor_material_id" />
+            <result property="materialId" column="material_id" />
             <result property="quantity" column="quantity" />
-            <result property="operatorId" column="operator_id" />
+            <result property="userId" column="user_id" />
             <result property="operationTime" column="operation_time" />
     </resultMap>
 
     <sql id="Base_Column_List">
-        operation_id,record_id,operation_type,description,contractor_material_id,quantity,
-        operator_id,operation_time
+        operation_id,record_id,operation_type,description,material_id,quantity,
+        user_id,operation_time
     </sql>
 </mapper>

@@ -8,6 +8,7 @@
             <id property="planId" column="plan_id" />
             <result property="planName" column="plan_name" />
             <result property="landId" column="land_id" />
+            <result property="cropId" column="crop_id" />
             <result property="creatorId" column="creator_id" />
             <result property="expectedOutput" column="expected_output" />
             <result property="startTime" column="start_time" />
@@ -17,7 +18,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        plan_id,plan_name,land_id,creator_id,expected_output,start_time,
-        end_time,create_time,status
+        plan_id,plan_name,land_id,crop_id,creator_id,expected_output,
+        start_time,end_time,create_time,status
     </sql>
 </mapper>

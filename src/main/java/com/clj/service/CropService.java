@@ -2,6 +2,7 @@ package com.clj.service;
 
 import com.clj.domain.Crop;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.utils.Result;
 
 /**
 * @author ajie
@@ -10,4 +11,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface CropService extends IService<Crop> {
 
+    Result add(Crop crop);
+    Result delete(Integer cropId);
+    Result updateCrop(Crop crop);
+    Result getCropsByPage(Integer pageNum, Integer pageSize);
+
+    Result searchCropsByPage(String keyword, Integer pageNum, Integer pageSize);
 }

@@ -31,9 +31,9 @@ public class EquipmentRecord {
     private Long ownerId;
 
     /**
-     * 状态
+     * 状态 0闲置 1报修中
      */
-    private String status;
+    private Integer status;
 
     /**
      * 更新时间

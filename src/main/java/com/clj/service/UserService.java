@@ -11,4 +11,20 @@ import com.clj.utils.Result;
 */
 public interface UserService extends IService<User> {
     public Result getUsersByPage(Integer pageNum, Integer pageSize);
+
+    Result addUser(User user);
+
+    Result deleteUser(Integer id);
+
+    Result updateUser(User user);
+
+    Result searchUsersByPage(String keyword, Integer pageNum, Integer pageSize);
+
+    Result updateUserStatus(Integer id, Integer status);
+
+    Result searchUserByNameAndPhone(String name, String phone);
+
+    Result getContractorsByPage(Integer pageNum, Integer pageSize);
+
+    Result searchContractorsByPage(String keyword, Integer pageNum, Integer pageSize);
 }

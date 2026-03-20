@@ -7,13 +7,13 @@
     <resultMap id="BaseResultMap" type="com.clj.domain.Material">
             <id property="materialId" column="material_id" />
             <result property="materialName" column="material_name" />
-            <result property="materialTypeId" column="material_type_id" />
+            <result property="typeId" column="type_id" />
             <result property="stock" column="stock" />
             <result property="warningStock" column="warning_stock" />
             <result property="createTime" column="create_time" />
     </resultMap>
 
     <sql id="Base_Column_List">
-        material_id,material_name,material_type_id,stock,warning_stock,create_time
+        material_id,material_name,type_id,stock,warning_stock,create_time
     </sql>
 </mapper>

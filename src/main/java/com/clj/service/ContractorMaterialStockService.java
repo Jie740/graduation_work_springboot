@@ -2,6 +2,7 @@ package com.clj.service;
 
 import com.clj.domain.ContractorMaterialStock;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.utils.Result;
 
 /**
 * @author ajie
@@ -10,4 +11,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface ContractorMaterialStockService extends IService<ContractorMaterialStock> {
 
+    Result add(ContractorMaterialStock contractorMaterialStock);
 }

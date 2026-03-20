@@ -28,7 +28,7 @@ public class Material {
     /**
      * 农资类型ID
      */
-    private Long materialTypeId;
+    private Long typeId;
 
     /**
      * 库存
@@ -59,7 +59,7 @@ public class Material {
         Material other = (Material) that;
         return (this.getMaterialId() == null ? other.getMaterialId() == null : this.getMaterialId().equals(other.getMaterialId()))
             && (this.getMaterialName() == null ? other.getMaterialName() == null : this.getMaterialName().equals(other.getMaterialName()))
-            && (this.getMaterialTypeId() == null ? other.getMaterialTypeId() == null : this.getMaterialTypeId().equals(other.getMaterialTypeId()))
+            && (this.getTypeId() == null ? other.getTypeId() == null : this.getTypeId().equals(other.getTypeId()))
             && (this.getStock() == null ? other.getStock() == null : this.getStock().equals(other.getStock()))
             && (this.getWarningStock() == null ? other.getWarningStock() == null : this.getWarningStock().equals(other.getWarningStock()))
             && (this.getCreateTime() == null ? other.getCreateTime() == null : this.getCreateTime().equals(other.getCreateTime()));
@@ -71,7 +71,7 @@ public class Material {
         int result = 1;
         result = prime * result + ((getMaterialId() == null) ? 0 : getMaterialId().hashCode());
         result = prime * result + ((getMaterialName() == null) ? 0 : getMaterialName().hashCode());
-        result = prime * result + ((getMaterialTypeId() == null) ? 0 : getMaterialTypeId().hashCode());
+        result = prime * result + ((getTypeId() == null) ? 0 : getTypeId().hashCode());
         result = prime * result + ((getStock() == null) ? 0 : getStock().hashCode());
         result = prime * result + ((getWarningStock() == null) ? 0 : getWarningStock().hashCode());
         result = prime * result + ((getCreateTime() == null) ? 0 : getCreateTime().hashCode());
@@ -86,7 +86,7 @@ public class Material {
         sb.append("Hash = ").append(hashCode());
         sb.append(", materialId=").append(materialId);
         sb.append(", materialName=").append(materialName);
-        sb.append(", materialTypeId=").append(materialTypeId);
+        sb.append(", typeId=").append(typeId);
         sb.append(", stock=").append(stock);
         sb.append(", warningStock=").append(warningStock);
         sb.append(", createTime=").append(createTime);

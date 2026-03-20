@@ -2,6 +2,8 @@ package com.clj.service;
 
 import com.clj.domain.PlantingPlanAdjust;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.domain.dto.PlantingPlanAdjustDto;
+import com.clj.utils.Result;
 
 /**
 * @author ajie
@@ -10,4 +12,14 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface PlantingPlanAdjustService extends IService<PlantingPlanAdjust> {
 
+    Result add(PlantingPlanAdjustDto plantingPlanAdjustDto);
+    Result delete(Long id);
+    Result updateStatus(Long id, Integer status);
+    Result getPlantingPlanAdjustsByPage(Integer pageNum, Integer pageSize);
+
+    Result searchPlantingPlanAdjustsByPage(String keyword, Integer pageNum, Integer pageSize);
+
+    Result updatePlantingPlanAdjust(PlantingPlanAdjustDto plantingPlanAdjustDto);
+
+    Result getPlantingPlanAdjustsByAdjustId(Long adjustId);
 }
