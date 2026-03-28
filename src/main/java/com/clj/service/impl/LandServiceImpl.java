@@ -52,13 +52,13 @@ public class LandServiceImpl extends ServiceImpl<LandMapper, Land>
     }
 
 
-    @Override
-    public Boolean updateLandStatus(Long landId, Integer status) {
-        return this.lambdaUpdate()
-                .eq(Land::getLandId, landId)
-                .set(Land::getStatus, status)
-                .update();
-    }
+//    @Override
+//    public Boolean updateLandStatus(Long landId, Integer status) {
+//        return this.lambdaUpdate()
+//                .eq(Land::getLandId, landId)
+//                .set(Land::getStatus, status)
+//                .update();
+//    }
 
     @Override
     public Result getAll() {

@@ -2,6 +2,7 @@ package com.clj.service;
 
 import com.clj.domain.EquipmentRecord;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.domain.dto.EquipmentRecordDto;
 import com.clj.utils.Result;
 
 /**
@@ -12,4 +13,12 @@ import com.clj.utils.Result;
 public interface EquipmentRecordService extends IService<EquipmentRecord> {
 
     Result add(EquipmentRecord equipmentRecord);
+
+    Result delete(Long equipmentRecordId);
+
+    Result getByPage(Integer pageNum, Integer pageSize);
+
+    Result searchByPage(String keyword, Integer pageNum, Integer pageSize);
+
+    Result updateStatus(EquipmentRecordDto equipmentRecordDto);
 }

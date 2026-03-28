@@ -21,7 +21,7 @@ public interface LandService extends IService<Land> {
 
     Result searchLandsByPage(String keyword, Integer pageNum, Integer pageSize);
 
-    Boolean updateLandStatus(Long landId, Integer status);
+//    Boolean updateLandStatus(Long landId, Integer status);
 
     Result getAll();
 

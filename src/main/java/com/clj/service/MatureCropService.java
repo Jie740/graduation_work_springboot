@@ -14,4 +14,14 @@ public interface MatureCropService extends IService<MatureCrop> {
     Result add(MatureCrop matureCrop);
 
     Result getMatureCropsByPage(Integer pageNum, Integer pageSize);
+
+    /**
+     * 获取成熟作物统计数据
+     * @param landId 地块ID（可选）
+     * @param startDate 开始日期（可选），格式 "YYYY-MM-DD"
+     * @param endDate 结束日期（可选），格式 "YYYY-MM-DD"
+     * @return 统计数据
+     */
+    Result getStatistics(Long landId, String startDate, String endDate);
+
 }

@@ -27,29 +27,29 @@ public class CropGrowthRecord {
     private Long recordId;
 
     /**
-     * 土壤湿度
+     * 采集时间
      */
-    private BigDecimal soilMoisture;
+    private Date collectTime;
 
     /**
-     * 环境温度
+     * 温度
      */
     private BigDecimal temperature;
 
     /**
-     * 光照强度
+     * 湿度
      */
-    private BigDecimal lightIntensity;
+    private BigDecimal humidity;
 
     /**
-     * 空气湿度
+     * 光照
      */
-    private BigDecimal airHumidity;
+    private BigDecimal light;
 
     /**
-     * 采集时间
+     * ph值
      */
-    private Date collectTime;
+    private BigDecimal ph;
 
     @Override
     public boolean equals(Object that) {
@@ -65,11 +65,11 @@ public class CropGrowthRecord {
         CropGrowthRecord other = (CropGrowthRecord) that;
         return (this.getGrowthId() == null ? other.getGrowthId() == null : this.getGrowthId().equals(other.getGrowthId()))
             && (this.getRecordId() == null ? other.getRecordId() == null : this.getRecordId().equals(other.getRecordId()))
-            && (this.getSoilMoisture() == null ? other.getSoilMoisture() == null : this.getSoilMoisture().equals(other.getSoilMoisture()))
+            && (this.getCollectTime() == null ? other.getCollectTime() == null : this.getCollectTime().equals(other.getCollectTime()))
             && (this.getTemperature() == null ? other.getTemperature() == null : this.getTemperature().equals(other.getTemperature()))
-            && (this.getLightIntensity() == null ? other.getLightIntensity() == null : this.getLightIntensity().equals(other.getLightIntensity()))
-            && (this.getAirHumidity() == null ? other.getAirHumidity() == null : this.getAirHumidity().equals(other.getAirHumidity()))
-            && (this.getCollectTime() == null ? other.getCollectTime() == null : this.getCollectTime().equals(other.getCollectTime()));
+            && (this.getHumidity() == null ? other.getHumidity() == null : this.getHumidity().equals(other.getHumidity()))
+            && (this.getLight() == null ? other.getLight() == null : this.getLight().equals(other.getLight()))
+            && (this.getPh() == null ? other.getPh() == null : this.getPh().equals(other.getPh()));
     }
 
     @Override
@@ -78,11 +78,11 @@ public class CropGrowthRecord {
         int result = 1;
         result = prime * result + ((getGrowthId() == null) ? 0 : getGrowthId().hashCode());
         result = prime * result + ((getRecordId() == null) ? 0 : getRecordId().hashCode());
-        result = prime * result + ((getSoilMoisture() == null) ? 0 : getSoilMoisture().hashCode());
-        result = prime * result + ((getTemperature() == null) ? 0 : getTemperature().hashCode());
-        result = prime * result + ((getLightIntensity() == null) ? 0 : getLightIntensity().hashCode());
-        result = prime * result + ((getAirHumidity() == null) ? 0 : getAirHumidity().hashCode());
         result = prime * result + ((getCollectTime() == null) ? 0 : getCollectTime().hashCode());
+        result = prime * result + ((getTemperature() == null) ? 0 : getTemperature().hashCode());
+        result = prime * result + ((getHumidity() == null) ? 0 : getHumidity().hashCode());
+        result = prime * result + ((getLight() == null) ? 0 : getLight().hashCode());
+        result = prime * result + ((getPh() == null) ? 0 : getPh().hashCode());
         return result;
     }
 
@@ -94,11 +94,11 @@ public class CropGrowthRecord {
         sb.append("Hash = ").append(hashCode());
         sb.append(", growthId=").append(growthId);
         sb.append(", recordId=").append(recordId);
-        sb.append(", soilMoisture=").append(soilMoisture);
-        sb.append(", temperature=").append(temperature);
-        sb.append(", lightIntensity=").append(lightIntensity);
-        sb.append(", airHumidity=").append(airHumidity);
         sb.append(", collectTime=").append(collectTime);
+        sb.append(", temperature=").append(temperature);
+        sb.append(", humidity=").append(humidity);
+        sb.append(", light=").append(light);
+        sb.append(", ph=").append(ph);
         sb.append("]");
         return sb.toString();
     }

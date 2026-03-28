@@ -2,6 +2,7 @@ package com.clj.service;
 
 import com.clj.domain.ContractorMaterialStock;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.domain.dto.ContractorMaterialStockDto;
 import com.clj.utils.Result;
 
 /**
@@ -12,4 +13,12 @@ import com.clj.utils.Result;
 public interface ContractorMaterialStockService extends IService<ContractorMaterialStock> {
 
     Result add(ContractorMaterialStock contractorMaterialStock);
+
+    Result delete(Long contractorMaterialId);
+
+    Result updateContractorMaterialStock(ContractorMaterialStockDto contractorMaterialStockDto);
+
+    Result getByPage(Integer pageNum, Integer pageSize);
+
+    Result searchByPage(String keyword, Integer pageNum, Integer pageSize);
 }

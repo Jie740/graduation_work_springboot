@@ -10,10 +10,9 @@
             <result property="equipmentId" column="equipment_id" />
             <result property="faultDescription" column="fault_description" />
             <result property="applyTime" column="apply_time" />
-            <result property="status" column="status" />
     </resultMap>
 
     <sql id="Base_Column_List">
-        apply_id,applicant_id,equipment_id,fault_description,apply_time,status
+        apply_id,applicant_id,equipment_id,fault_description,apply_time
     </sql>
 </mapper>

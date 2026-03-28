@@ -1,8 +1,6 @@
 package com.clj.controller;
 
 import com.clj.domain.MatureCrop;
-import com.clj.service.CropService;
-import com.clj.service.LandService;
 import com.clj.service.MatureCropService;
 import com.clj.utils.Result;
 import lombok.RequiredArgsConstructor;
@@ -30,4 +28,21 @@ public class MatureCropController {
     public Result delete(@PathVariable("matureCropId") Integer id){
         return matureCropService.removeById(id)?Result.ok():Result.error("删除失败");
     }
+
+    /**
+     * 获取成熟作物统计数据
+     * @param landId 地块ID（可选）
+     * @param startDate 开始日期（可选），格式 "YYYY-MM-DD"
+     * @param endDate 结束日期（可选），格式 "YYYY-MM-DD"
+     * @return 统计数据
+     */
+    @GetMapping("/statistics")
+    public Result getStatistics(
+            @RequestParam(value = "landId", required = false) Long landId,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate
+    ){
+        return matureCropService.getStatistics(landId, startDate, endDate);
+    }
+
 }

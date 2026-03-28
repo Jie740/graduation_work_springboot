@@ -42,11 +42,6 @@ public class Land {
     private String soilType;
 
     /**
-     * 状态（0未分配 1已分配）
-     */
-    private Integer status;
-
-    /**
      * 创建时间
      */
     private Date createTime;
@@ -68,7 +63,6 @@ public class Land {
             && (this.getLocation() == null ? other.getLocation() == null : this.getLocation().equals(other.getLocation()))
             && (this.getArea() == null ? other.getArea() == null : this.getArea().equals(other.getArea()))
             && (this.getSoilType() == null ? other.getSoilType() == null : this.getSoilType().equals(other.getSoilType()))
-            && (this.getStatus() == null ? other.getStatus() == null : this.getStatus().equals(other.getStatus()))
             && (this.getCreateTime() == null ? other.getCreateTime() == null : this.getCreateTime().equals(other.getCreateTime()));
     }
 
@@ -81,7 +75,6 @@ public class Land {
         result = prime * result + ((getLocation() == null) ? 0 : getLocation().hashCode());
         result = prime * result + ((getArea() == null) ? 0 : getArea().hashCode());
         result = prime * result + ((getSoilType() == null) ? 0 : getSoilType().hashCode());
-        result = prime * result + ((getStatus() == null) ? 0 : getStatus().hashCode());
         result = prime * result + ((getCreateTime() == null) ? 0 : getCreateTime().hashCode());
         return result;
     }
@@ -97,7 +90,6 @@ public class Land {
         sb.append(", location=").append(location);
         sb.append(", area=").append(area);
         sb.append(", soilType=").append(soilType);
-        sb.append(", status=").append(status);
         sb.append(", createTime=").append(createTime);
         sb.append("]");
         return sb.toString();

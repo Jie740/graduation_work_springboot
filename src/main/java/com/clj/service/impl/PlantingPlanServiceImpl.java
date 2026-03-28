@@ -39,6 +39,13 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
 
     @Override
     public Result add(PlantingPlanDto plantingPlanDto) {
+        //查询计划名是否存在
+        PlantingPlan plantingPlan1 = this.lambdaQuery().eq(PlantingPlan::getPlanName, plantingPlanDto.getPlanName())
+                .one();
+        if (plantingPlan1 != null){
+            return Result.error("计划名已存在");
+        }
+
         //通过地块名和地块位置查询地块ID
         Land land = landService.lambdaQuery().eq(Land::getLandName, plantingPlanDto.getLandName())
                 .eq(Land::getLocation, plantingPlanDto.getLandLocation())
@@ -47,6 +54,15 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
             return Result.error("地块不存在");
         }
         Long landId = land.getLandId();
+
+        //查询地块是否有正在执行的计划
+        PlantingPlan plantingPlan2 = this.lambdaQuery().eq(PlantingPlan::getLandId, landId)
+                .eq(PlantingPlan::getStatus, 1)
+                .one();
+        if (plantingPlan2 != null){
+            return Result.error("该地块有正在执行的计划");
+        }
+
         //通过农作物名查询农作物ID
         Crop crop = cropService.lambdaQuery().eq(Crop::getCropName, plantingPlanDto.getCropName())
                 .one();

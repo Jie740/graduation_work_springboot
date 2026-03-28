@@ -13,6 +13,8 @@ public class PlantingRecordVo {
     private String location;
     private BigDecimal area;
     private String cropName;
+    private Long planId;
+    private String planName;
     private Date plantingDate;
     private Date expectedHarvestDate;
     private Date actualHarvestDate;

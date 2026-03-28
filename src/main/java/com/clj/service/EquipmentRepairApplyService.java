@@ -2,6 +2,8 @@ package com.clj.service;
 
 import com.clj.domain.EquipmentRepairApply;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.domain.dto.EquipmentRepairApplyDto;
+import com.clj.utils.Result;
 
 /**
 * @author ajie
@@ -10,4 +12,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface EquipmentRepairApplyService extends IService<EquipmentRepairApply> {
 
+    Result add(EquipmentRepairApplyDto equipmentRepairApplyDto);
 }

@@ -40,11 +40,6 @@ public class EquipmentRepairApply {
      */
     private Date applyTime;
 
-    /**
-     * 状态
-     */
-    private String status;
-
     @Override
     public boolean equals(Object that) {
         if (this == that) {
@@ -61,8 +56,7 @@ public class EquipmentRepairApply {
             && (this.getApplicantId() == null ? other.getApplicantId() == null : this.getApplicantId().equals(other.getApplicantId()))
             && (this.getEquipmentId() == null ? other.getEquipmentId() == null : this.getEquipmentId().equals(other.getEquipmentId()))
             && (this.getFaultDescription() == null ? other.getFaultDescription() == null : this.getFaultDescription().equals(other.getFaultDescription()))
-            && (this.getApplyTime() == null ? other.getApplyTime() == null : this.getApplyTime().equals(other.getApplyTime()))
-            && (this.getStatus() == null ? other.getStatus() == null : this.getStatus().equals(other.getStatus()));
+            && (this.getApplyTime() == null ? other.getApplyTime() == null : this.getApplyTime().equals(other.getApplyTime()));
     }
 
     @Override
@@ -74,7 +68,6 @@ public class EquipmentRepairApply {
         result = prime * result + ((getEquipmentId() == null) ? 0 : getEquipmentId().hashCode());
         result = prime * result + ((getFaultDescription() == null) ? 0 : getFaultDescription().hashCode());
         result = prime * result + ((getApplyTime() == null) ? 0 : getApplyTime().hashCode());
-        result = prime * result + ((getStatus() == null) ? 0 : getStatus().hashCode());
         return result;
     }
 
@@ -89,7 +82,6 @@ public class EquipmentRepairApply {
         sb.append(", equipmentId=").append(equipmentId);
         sb.append(", faultDescription=").append(faultDescription);
         sb.append(", applyTime=").append(applyTime);
-        sb.append(", status=").append(status);
         sb.append("]");
         return sb.toString();
     }
