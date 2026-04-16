@@ -23,4 +23,6 @@ public interface LandAllocationService extends IService<LandAllocation> {
     Result getContractorInfoByLandId(Long landId);
 
     Result searchLandAllocationByPage(String keyword, Integer pageNum, Integer pageSize);
+
+    Result getMyLands();
 }

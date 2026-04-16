@@ -50,6 +50,11 @@ public class PlantingPlanController {
         return plantingPlanService.getPublishedPlantingPlans();
     }
 
+    //获得对应用户的已发布的计划
+    @GetMapping("/getPublishedPlantingPlanByUserId")
+    public Result getPlantingPlanByUserId() {
+        return plantingPlanService.getPublishedPlantingPlanByUserId();
+    }
     @GetMapping("/getAll")
     public Result getAll() {
         return Result.ok(plantingPlanService.list());
@@ -58,5 +63,16 @@ public class PlantingPlanController {
     @GetMapping("/getByLandId/{landId}")
     public Result getByLandId(@PathVariable("landId") Long landId) {
         return plantingPlanService.getByLandId(landId);
+    }
+
+    @GetMapping("/getMyPlans")
+    public Result getMyPlans() {
+        return plantingPlanService.getMyPlans();
+    }
+
+    //根据计划ID查询用户名
+    @GetMapping("/getUserNameByPlanId/{planId}")
+    public Result getUserNameByPlanId(@PathVariable("planId") Long planId) {
+        return plantingPlanService.getUserNameByPlanId(planId);
     }
 }

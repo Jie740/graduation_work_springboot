@@ -8,6 +8,7 @@ import com.clj.domain.vo.PlantingRecordVo;
 import com.clj.service.*;
 import com.clj.mapper.PlantingRecordMapper;
 import com.clj.utils.Result;
+import com.clj.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class PlantingRecordServiceImpl extends ServiceImpl<PlantingRecordMapper,
     final CropService cropService;
     final MatureCropService matureCropService;
     final PlantingPlanService plantingPlanService;
+    final LandAllocationService landAllocationService;
     @Override
     public Result add(PlantingRecordDto plantingRecordDto) {
         PlantingRecord plantingRecord = new PlantingRecord();
@@ -42,22 +44,48 @@ public class PlantingRecordServiceImpl extends ServiceImpl<PlantingRecordMapper,
     @Transactional
     public Result updatePlantingRecord(PlantingRecordDto plantingRecordDto) {
         //编辑为已成熟
-        if (plantingRecordDto.getStatus()==1){
-            //添加成熟作物表
-            MatureCrop matureCrop = new MatureCrop();
-            matureCrop.setRecordId(plantingRecordDto.getRecordId());
-            matureCrop.setOutputQuantity(plantingRecordDto.getOutputQuantity());
-            matureCrop.setHarvestTime(plantingRecordDto.getActualHarvestDate());
-            matureCropService.add(matureCrop);
+        if (plantingRecordDto.getStatus() != null && plantingRecordDto.getStatus() == 1){
+            // 校验产出值是否合法
+            if (plantingRecordDto.getOutputQuantity() == null || plantingRecordDto.getOutputQuantity().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                return Result.error("产出值必须大于0");
+            }
+            
+            // 校验收割时间
+            if (plantingRecordDto.getActualHarvestDate() == null) {
+                return Result.error("收割时间不能为空");
+            }
+            
+            // 查询该种植记录是否已经存在成熟作物记录
+            MatureCrop existingMatureCrop = matureCropService.lambdaQuery()
+                    .eq(MatureCrop::getRecordId, plantingRecordDto.getRecordId())
+                    .one();
+            
+            if (existingMatureCrop != null) {
+                // 如果已存在，则更新成熟作物表的产出和收割时间
+                existingMatureCrop.setOutputQuantity(plantingRecordDto.getOutputQuantity());
+                existingMatureCrop.setHarvestTime(plantingRecordDto.getActualHarvestDate());
+                boolean updateResult = matureCropService.updateById(existingMatureCrop);
+                if (!updateResult) {
+                    return Result.error("更新成熟作物记录失败");
+                }
+            } else {
+                // 如果不存在，则添加新的成熟作物记录
+                MatureCrop matureCrop = new MatureCrop();
+                matureCrop.setRecordId(plantingRecordDto.getRecordId());
+                matureCrop.setOutputQuantity(plantingRecordDto.getOutputQuantity());
+                matureCrop.setHarvestTime(plantingRecordDto.getActualHarvestDate());
+                matureCropService.add(matureCrop);
+            }
 
             //修改计划表状态为已完成
-            System.out.println(plantingRecordDto.getPlanId());
-            plantingPlanService.updateStatus(plantingRecordDto.getPlanId(),3);
-
+            if (plantingRecordDto.getPlanId() != null) {
+                plantingPlanService.updateStatus(plantingRecordDto.getPlanId(), 3);
+            }
         }
+        
         PlantingRecord plantingRecord = new PlantingRecord();
-        BeanUtils.copyProperties(plantingRecordDto,plantingRecord);
-        return updateById(plantingRecord)?Result.ok():Result.error("更新失败");
+        BeanUtils.copyProperties(plantingRecordDto, plantingRecord);
+        return updateById(plantingRecord) ? Result.ok() : Result.error("更新失败");
     }
 
     @Override
@@ -240,6 +268,95 @@ public class PlantingRecordServiceImpl extends ServiceImpl<PlantingRecordMapper,
         }
 
         Page<PlantingRecordVo> plantingRecordVoPage = new Page<>(pageNum, pageSize, page.getTotal());
+        plantingRecordVoPage.setRecords(plantingRecordVos);
+        return Result.ok(plantingRecordVoPage);
+    }
+
+    @Override
+    public Result getMyPlantingRecords(Integer pageNum, Integer pageSize) {
+        // 1. 从 ThreadLocal 获取当前用户ID
+        Long userId = UserHolder.getUserId();
+        if (userId == null) {
+            return Result.error("未登录或登录已过期");
+        }
+
+        // 2. 根据用户ID查询地块分配表，获取该用户分配的地块ID和开始、结束时间
+        List<LandAllocation> allocations = landAllocationService.lambdaQuery()
+                .eq(LandAllocation::getContractorId, userId)
+                .list();
+
+        // 如果没有分配的地块，返回空列表
+        if (allocations.isEmpty()) {
+            Page<PlantingRecordVo> emptyPage = new Page<>(pageNum, pageSize, 0);
+            emptyPage.setRecords(new ArrayList<>());
+            return Result.ok(emptyPage);
+        }
+
+        // 3. 根据地块ID和分配时间区间查询种植记录
+        ArrayList<PlantingRecord> allRecords = new ArrayList<>();
+        
+        for (LandAllocation allocation : allocations) {
+            if (allocation.getLandId() != null) {
+                List<PlantingRecord> records = this.lambdaQuery()
+                        .eq(PlantingRecord::getLandId, allocation.getLandId())
+                        .ge(allocation.getStartDate() != null, PlantingRecord::getPlantingDate, allocation.getStartDate())
+                        .le(allocation.getEndDate() != null, PlantingRecord::getPlantingDate, allocation.getEndDate())
+                        .list();
+                allRecords.addAll(records);
+            }
+        }
+        
+        // 手动分页
+        int total = allRecords.size();
+        int fromIndex = Math.min((pageNum - 1) * pageSize, total);
+        int toIndex = Math.min(fromIndex + pageSize, total);
+        List<PlantingRecord> pagedRecords = new ArrayList<>();
+        if (fromIndex < total) {
+            pagedRecords = allRecords.subList(fromIndex, toIndex);
+        }
+
+        // 4. 收集关联ID并批量查询
+        ArrayList<Long> recordLandIds = new ArrayList<>();
+        ArrayList<Long> cropIds = new ArrayList<>();
+        ArrayList<Long> planIds = new ArrayList<>();
+        for (PlantingRecord plantingRecord : pagedRecords) {
+            if (plantingRecord.getLandId() != null) recordLandIds.add(plantingRecord.getLandId());
+            if (plantingRecord.getCropId() != null) cropIds.add(plantingRecord.getCropId());
+            if (plantingRecord.getPlanId() != null) planIds.add(plantingRecord.getPlanId());
+        }
+
+        ArrayList<Land> lands = !recordLandIds.isEmpty() ? (ArrayList<Land>) landService.listByIds(recordLandIds) : new ArrayList<>();
+        ArrayList<Crop> crops = !cropIds.isEmpty() ? (ArrayList<Crop>) cropService.listByIds(cropIds) : new ArrayList<>();
+        ArrayList<PlantingPlan> plantingPlans = !planIds.isEmpty() ? (ArrayList<PlantingPlan>) plantingPlanService.listByIds(planIds) : new ArrayList<>();
+
+        // 5. 转换为 Map
+        java.util.Map<Long, Land> landMap = lands.stream().collect(java.util.stream.Collectors.toMap(Land::getLandId, land -> land));
+        java.util.Map<Long, Crop> cropMap = crops.stream().collect(java.util.stream.Collectors.toMap(Crop::getCropId, crop -> crop));
+        java.util.Map<Long, PlantingPlan> planMap = plantingPlans.stream().collect(java.util.stream.Collectors.toMap(PlantingPlan::getPlanId, plan -> plan));
+
+        // 6. 构建 VO
+        ArrayList<PlantingRecordVo> plantingRecordVos = new ArrayList<>();
+        for (PlantingRecord plantingRecord : pagedRecords) {
+            PlantingRecordVo vo = new PlantingRecordVo();
+            BeanUtils.copyProperties(plantingRecord, vo);
+            
+            Land land = landMap.get(plantingRecord.getLandId());
+            if (land != null) {
+                vo.setLandName(land.getLandName());
+                vo.setLocation(land.getLocation());
+                vo.setArea(land.getArea());
+            }
+
+            Crop crop = cropMap.get(plantingRecord.getCropId());
+            if (crop != null) vo.setCropName(crop.getCropName());
+
+            PlantingPlan plan = planMap.get(plantingRecord.getPlanId());
+            if (plan != null) vo.setPlanName(plan.getPlanName());
+
+            plantingRecordVos.add(vo);
+        }
+
+        Page<PlantingRecordVo> plantingRecordVoPage = new Page<>(pageNum, pageSize, total);
         plantingRecordVoPage.setRecords(plantingRecordVos);
         return Result.ok(plantingRecordVoPage);
     }

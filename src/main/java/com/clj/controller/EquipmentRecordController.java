@@ -32,4 +32,18 @@ public class EquipmentRecordController {
                                                  @PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
         return equipmentRecordService.searchByPage(keyword, pageNum, pageSize);
     }
+
+    @GetMapping("/getByUserId/{pageNum}/{pageSize}")
+    public Result getByUserId(
+            @RequestParam(value = "keyword",required = false) String keyword
+            , @PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize
+    ) {
+        return equipmentRecordService.getByUserId(keyword,pageNum,pageSize);
+    }
+
+    //获取用户设备列表
+    @GetMapping("/getMyEquipment")
+    public Result getMyEquipment() {
+        return equipmentRecordService.getMyEquipment();
+    }
 }

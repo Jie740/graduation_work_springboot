@@ -27,10 +27,7 @@ public class PlantingPlanDto {
      */
     private String cropName;
 
-    /**
-     * 创建人ID
-     */
-    private Long creatorId;
+
 
     /**
      * 期望产出

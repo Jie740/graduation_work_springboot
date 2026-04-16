@@ -24,4 +24,10 @@ public interface PlantingPlanService extends IService<PlantingPlan> {
     Result getPublishedPlantingPlans();
 
     Result getByLandId(Long landId);
+
+    Result getMyPlans();
+
+    Result getPublishedPlantingPlanByUserId();
+
+    Result getUserNameByPlanId(Long planId);
 }

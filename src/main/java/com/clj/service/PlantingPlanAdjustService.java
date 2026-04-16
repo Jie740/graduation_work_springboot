@@ -22,4 +22,10 @@ public interface PlantingPlanAdjustService extends IService<PlantingPlanAdjust> 
     Result updatePlantingPlanAdjust(PlantingPlanAdjustDto plantingPlanAdjustDto);
 
     Result getPlantingPlanAdjustsByAdjustId(Long adjustId);
+
+    Result getPlantingPlanAdjustsByUserIdPage(Integer pageNum, Integer pageSize);
+
+    Result getPlantingPlanAdjustsByUser(String keyword, Integer pageNum, Integer pageSize);
+
+    Result cancel(Long adjustId);
 }

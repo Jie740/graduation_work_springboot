@@ -24,15 +24,15 @@ public class MvcConfig implements WebMvcConfigurer {
                 .allowedHeaders("*");
     }
 
-//    @Override
-//    public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(new BlacklistInterceptor(stringRedisTemplate))
-//                .addPathPatterns("/**")
-//                .excludePathPatterns("/login", "/logout")
-//                .order(0);
-//        registry.addInterceptor(new LoginInterceptor(stringRedisTemplate,tokenBlackListService))
-//                .addPathPatterns("/**")
-//                .excludePathPatterns( "/login", "/logout")
-//                .order(1);
-//    }
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new BlacklistInterceptor(stringRedisTemplate))
+                .addPathPatterns("/**")
+                .excludePathPatterns("/login", "/logout")
+                .order(0);
+        registry.addInterceptor(new LoginInterceptor(stringRedisTemplate,tokenBlackListService))
+                .addPathPatterns("/**")
+                .excludePathPatterns( "/login", "/logout")
+                .order(1);
+    }
 }

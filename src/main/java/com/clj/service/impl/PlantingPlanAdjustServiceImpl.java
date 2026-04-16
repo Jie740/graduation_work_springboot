@@ -11,12 +11,14 @@ import com.clj.domain.vo.PlantingPlanAdjustVo;
 import com.clj.service.*;
 import com.clj.mapper.PlantingPlanAdjustMapper;
 import com.clj.utils.Result;
+import com.clj.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -211,14 +213,21 @@ public class PlantingPlanAdjustServiceImpl extends ServiceImpl<PlantingPlanAdjus
             return Result.error("记录不存在");
         }
         PlantingPlanAdjustDetailVo vo = new PlantingPlanAdjustDetailVo();
-        //根据计划ID查询计划名
+        
+        //根据计划ID查询计划名和创建人
         PlantingPlan plantingPlan = plantingPlanService.lambdaQuery()
                 .eq(PlantingPlan::getPlanId, plantingPlanAdjust.getPlanId()).one();
         if (plantingPlan != null){
             vo.setPlanName(plantingPlan.getPlanName());
-            String name = userService.lambdaQuery().eq(User::getUserId, plantingPlan.getCreatorId()).one().getName();
-            vo.setCreator(name);
+            // 查询创建人信息
+            if (plantingPlan.getCreatorId() != null) {
+                User creator = userService.lambdaQuery().eq(User::getUserId, plantingPlan.getCreatorId()).one();
+                if (creator != null) {
+                    vo.setCreator(creator.getName());
+                }
+            }
         }
+        
         //根据地块ID查询地块名、地块位置、地块面积
         Land land = landService.lambdaQuery().eq(Land::getLandId, plantingPlanAdjust.getLandId()).one();
         if (land != null){
@@ -226,13 +235,25 @@ public class PlantingPlanAdjustServiceImpl extends ServiceImpl<PlantingPlanAdjus
             vo.setLandLocation(land.getLocation());
             vo.setLandArea(land.getArea());
         }
+        
         //根据作物ID查询作物名
         Crop crop = cropService.lambdaQuery().eq(Crop::getCropId, plantingPlanAdjust.getCropId()).one();
         if (crop != null){
             vo.setCropName(crop.getCropName());
         }
+        
+        //根据申请人ID查询申请人姓名和电话
+        if (plantingPlanAdjust.getApplicantId() != null) {
+            User applicant = userService.lambdaQuery().eq(User::getUserId, plantingPlanAdjust.getApplicantId()).one();
+            if (applicant != null) {
+                vo.setApplicant(applicant.getName());
+                vo.setPhone(applicant.getPhone());
+            }
+        }
+        
+        //复制其他属性（期望产出、开始时间、结束时间、调整原因等）
         BeanUtils.copyProperties(plantingPlanAdjust, vo);
-        System.out.println(vo);
+        
         return Result.ok(vo);
     }
 
@@ -265,6 +286,127 @@ public class PlantingPlanAdjustServiceImpl extends ServiceImpl<PlantingPlanAdjus
         }
         
         return vo;
+    }
+
+    @Override
+    public Result getPlantingPlanAdjustsByUserIdPage(Integer pageNum, Integer pageSize) {
+        // 1. 从 ThreadLocal 获取当前用户ID
+        Long userId = UserHolder.getUserId();
+        if (userId == null) {
+            return Result.error("未登录或登录已过期");
+        }
+
+        // 2. 分页查询该用户的计划调整申请记录
+        Page<PlantingPlanAdjust> page = new Page<>(pageNum, pageSize);
+        Page<PlantingPlanAdjust> plantingPlanAdjustPage = this.lambdaQuery()
+                .eq(PlantingPlanAdjust::getApplicantId, userId)
+                .orderByDesc(PlantingPlanAdjust::getApplyTime)
+                .page(page);
+
+        // 3. 转换为 VO 列表
+        ArrayList<PlantingPlanAdjustVo> vos = new ArrayList<>();
+        for (PlantingPlanAdjust plantingPlanAdjust : plantingPlanAdjustPage.getRecords()) {
+            PlantingPlanAdjustVo vo = buildVoFromRecord(plantingPlanAdjust);
+            vos.add(vo);
+        }
+
+        Page<PlantingPlanAdjustVo> voPage = new Page<>(pageNum, pageSize, plantingPlanAdjustPage.getTotal());
+        voPage.setRecords(vos);
+        return Result.ok(voPage);
+    }
+
+    @Override
+    public Result getPlantingPlanAdjustsByUser(String keyword, Integer pageNum, Integer pageSize) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getPlantingPlanAdjustsByUserIdPage(pageNum, pageSize);
+        }
+
+        // 1. 从 ThreadLocal 获取当前用户ID
+        Long userId = UserHolder.getUserId();
+        if (userId == null) {
+            return Result.error("未登录或登录已过期");
+        }
+
+        // 2. 根据关键词模糊查询该用户的计划调整记录（按计划名模糊搜索）
+        List<PlantingPlanAdjust> userAdjusts = this.lambdaQuery()
+                .eq(PlantingPlanAdjust::getApplicantId, userId)
+                .list();
+
+        if (userAdjusts.isEmpty()) {
+            Page<PlantingPlanAdjustVo> emptyPage = new Page<>(pageNum, pageSize, 0);
+            emptyPage.setRecords(new ArrayList<>());
+            return Result.ok(emptyPage);
+        }
+
+        // 3. 收集所有计划ID
+        ArrayList<Long> planIds = new ArrayList<>();
+        for (PlantingPlanAdjust adjust : userAdjusts) {
+            if (adjust.getPlanId() != null) {
+                planIds.add(adjust.getPlanId());
+            }
+        }
+
+        // 4. 根据计划名模糊查询匹配的计划ID
+        List<PlantingPlan> matchedPlans = plantingPlanService.lambdaQuery()
+                .in(PlantingPlan::getPlanId, planIds)
+                .like(PlantingPlan::getPlanName, keyword)
+                .list();
+
+        if (matchedPlans.isEmpty()) {
+            Page<PlantingPlanAdjustVo> emptyPage = new Page<>(pageNum, pageSize, 0);
+            emptyPage.setRecords(new ArrayList<>());
+            return Result.ok(emptyPage);
+        }
+
+        // 5. 获取匹配的计划ID列表
+        ArrayList<Long> matchedPlanIds = matchedPlans.stream()
+                .map(PlantingPlan::getPlanId)
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+
+        // 6. 查询这些计划的调整记录
+        List<PlantingPlanAdjust> filteredAdjusts = this.lambdaQuery()
+                .eq(PlantingPlanAdjust::getApplicantId, userId)
+                .in(PlantingPlanAdjust::getPlanId, matchedPlanIds)
+                .orderByDesc(PlantingPlanAdjust::getApplyTime)
+                .list();
+
+        // 7. 手动分页
+        int total = filteredAdjusts.size();
+        int fromIndex = Math.min((pageNum - 1) * pageSize, total);
+        int toIndex = Math.min(fromIndex + pageSize, total);
+        List<PlantingPlanAdjust> pagedAdjusts = new ArrayList<>();
+        if (fromIndex < total) {
+            pagedAdjusts = filteredAdjusts.subList(fromIndex, toIndex);
+        }
+
+        // 8. 转换为 VO 列表
+        ArrayList<PlantingPlanAdjustVo> vos = new ArrayList<>();
+        for (PlantingPlanAdjust plantingPlanAdjust : pagedAdjusts) {
+            PlantingPlanAdjustVo vo = buildVoFromRecord(plantingPlanAdjust);
+            vos.add(vo);
+        }
+
+        Page<PlantingPlanAdjustVo> voPage = new Page<>(pageNum, pageSize, total);
+        voPage.setRecords(vos);
+        return Result.ok(voPage);
+    }
+
+    @Override
+    @Transactional
+    public Result cancel(Long adjustId) {
+        PlantingPlanAdjust plantingPlanAdjust = this.lambdaQuery().eq(PlantingPlanAdjust::getAdjustId, adjustId)
+                .one();
+        if (plantingPlanAdjust == null) {
+            return Result.error("该申请不存在");
+        }
+        Long planId = plantingPlanAdjust.getPlanId();
+        this.removeById(adjustId);
+        //修改计划状态为执行中
+        return plantingPlanService.lambdaUpdate()
+                .eq(PlantingPlan::getPlanId, planId)
+                .set(PlantingPlan::getStatus, 1)
+                .update()?Result.ok():Result.error("取消失败");
+
     }
 }
 

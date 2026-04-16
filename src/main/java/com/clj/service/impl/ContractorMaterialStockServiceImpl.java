@@ -14,6 +14,7 @@ import com.clj.service.MaterialService;
 import com.clj.service.MaterialTypeService;
 import com.clj.service.UserService;
 import com.clj.utils.Result;
+import com.clj.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -200,6 +201,101 @@ public class ContractorMaterialStockServiceImpl extends ServiceImpl<ContractorMa
             if (material != null) {
                 vo.setMaterialName(material.getMaterialName());
                 
+                // 查询农资类型信息
+                MaterialType materialType = materialTypeService.getById(material.getTypeId());
+                if (materialType != null) {
+                    vo.setType(materialType.getTypeName());
+                }
+            }
+
+            // 从 Map 中获取用户信息
+            User user = userMap.get(stock.getUserId());
+            if (user != null) {
+                vo.setContractorName(user.getName());
+                vo.setPhone(user.getPhone());
+            }
+
+            voList.add(vo);
+        }
+
+        Page<ContractorMaterialStockVo> voPage = new Page<>(pageNum, pageSize, page.getTotal());
+        voPage.setRecords(voList);
+        return Result.ok(voPage);
+    }
+
+
+    @Override
+    public Result getByUserId(String keyword,Integer pageNum, Integer pageSize) {
+        Long userId = UserHolder.getUserId();
+        if (userId == null){
+            return Result.error("用户未登录");
+        }
+        Page<ContractorMaterialStock> page;
+        // 根据用户Id分页查询承包人农资库存记录
+        if (keyword == null|| keyword.trim().isEmpty()){
+            page = this.lambdaQuery()
+                    .eq(ContractorMaterialStock::getUserId, userId)
+                    .page(new Page<>(pageNum, pageSize));
+        }else {
+            Material one = materialService.lambdaQuery().eq(Material::getMaterialName, keyword)
+                    .one();
+            if (one == null){
+               return Result.error("没有该农资");
+            }else {
+                page = this.lambdaQuery()
+                        .eq(ContractorMaterialStock::getUserId, userId)
+                        .eq(ContractorMaterialStock::getMaterialId, one.getMaterialId())
+                        .page(new Page<>(pageNum, pageSize));
+            }
+
+        }
+
+
+        // 收集所有的农资 ID 和用户 ID
+        ArrayList<Long> materialIds = new ArrayList<>();
+        ArrayList<Long> userIds = new ArrayList<>();
+        for (ContractorMaterialStock stock : page.getRecords()) {
+            if (stock.getMaterialId() != null) {
+                materialIds.add(stock.getMaterialId());
+            }
+            if (stock.getUserId() != null) {
+                userIds.add(stock.getUserId());
+            }
+        }
+
+        // 批量查询农资信息
+        ArrayList<Material> materials = new ArrayList<>();
+        if (!materialIds.isEmpty()) {
+            materials = (ArrayList<Material>) materialService.listByIds(materialIds);
+        }
+
+        // 批量查询用户信息
+        ArrayList<User> users = new ArrayList<>();
+        if (!userIds.isEmpty()) {
+            users = (ArrayList<User>) userService.listByIds(userIds);
+        }
+
+        // 转换为 Map 便于快速查找
+        Map<Long, Material> materialMap = materials.stream()
+                .collect(Collectors.toMap(Material::getMaterialId, m -> m));
+        Map<Long, User> userMap = users.stream()
+                .collect(Collectors.toMap(User::getUserId, u -> u));
+
+        // 构建 VO 对象
+        ArrayList<ContractorMaterialStockVo> voList = new ArrayList<>();
+        for (ContractorMaterialStock stock : page.getRecords()) {
+            ContractorMaterialStockVo vo = new ContractorMaterialStockVo();
+
+            // 设置基本信息
+            vo.setContractorMaterialId(stock.getContractorMaterialId());
+            vo.setStock(stock.getStock());
+            vo.setWarningStock(stock.getWarningStock());
+
+            // 从 Map 中获取农资信息
+            Material material = materialMap.get(stock.getMaterialId());
+            if (material != null) {
+                vo.setMaterialName(material.getMaterialName());
+
                 // 查询农资类型信息
                 MaterialType materialType = materialTypeService.getById(material.getTypeId());
                 if (materialType != null) {

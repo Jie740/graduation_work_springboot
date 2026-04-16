@@ -24,4 +24,5 @@ public interface MatureCropService extends IService<MatureCrop> {
      */
     Result getStatistics(Long landId, String startDate, String endDate);
 
+    Result getOutputQuantity(Long recordId);
 }

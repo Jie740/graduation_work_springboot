@@ -9,6 +9,7 @@ import com.clj.mapper.EquipmentMapper;
 import com.clj.service.EquipmentService;
 import com.clj.service.EquipmentTypeService;
 import com.clj.utils.Result;
+import com.clj.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -110,6 +111,7 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
         map.put("typeName", equipmentType.getEquipmentTypeName());
         return Result.ok(map);
     }
+
 
 
 

@@ -3,10 +3,16 @@ package com.clj.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clj.domain.Land;
+import com.clj.domain.LandAllocation;
+import com.clj.service.LandAllocationService;
 import com.clj.service.LandService;
 import com.clj.mapper.LandMapper;
 import com.clj.utils.Result;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
 * @author ajie
@@ -14,11 +20,15 @@ import org.springframework.stereotype.Service;
 * @createDate 2026-03-02 20:08:21
 */
 @Service
+@RequiredArgsConstructor
 public class LandServiceImpl extends ServiceImpl<LandMapper, Land>
     implements LandService{
 
     @Override
     public Result addLand(Land land) {
+        if (this.lambdaQuery().eq(Land::getLandName, land.getLandName()).exists()){
+            return Result.error("地块名已存在");
+        }
         return this.save(land)?Result.ok():Result.error("添加失败");
     }
 
@@ -64,6 +74,8 @@ public class LandServiceImpl extends ServiceImpl<LandMapper, Land>
     public Result getAll() {
         return Result.ok(this.list());
     }
+
+
 }
 
 

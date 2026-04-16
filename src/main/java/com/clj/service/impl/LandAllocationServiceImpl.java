@@ -7,6 +7,7 @@ import com.clj.constants.LandConstants;
 import com.clj.domain.*;
 import com.clj.domain.dto.LandAllocationDto;
 import com.clj.domain.vo.ContractorInfoVo;
+import com.clj.domain.vo.ContractorLandVo;
 import com.clj.domain.vo.LandAllocationVo;
 import com.clj.domain.vo.PlantingRecordVo;
 import com.clj.service.LandAllocationService;
@@ -14,6 +15,7 @@ import com.clj.mapper.LandAllocationMapper;
 import com.clj.service.LandService;
 import com.clj.service.UserService;
 import com.clj.utils.Result;
+import com.clj.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.clj.constants.LandConstants.ALLOCATED;
 import static com.clj.constants.LandConstants.UN_ALLOCATED;
@@ -50,6 +53,25 @@ public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper,
             return Result.error("该承包人不存在");
         }
         landAllocation.setContractorId(one.getUserId());
+        
+        // 查询该地块在相同时间范围内是否已有分配记录
+        // 时间冲突判断：已存在记录的起止时间与新增记录的起止时间有重叠
+        Long landId = landAllocation.getLandId();
+        java.util.Date newStartDate = landAllocation.getStartDate();
+        java.util.Date newEndDate = landAllocation.getEndDate();
+        
+        // 查询条件：地块ID相同，且时间区间有重叠
+        // 时间重叠条件：existing.startDate <= new.endDate AND existing.endDate >= new.startDate
+        long count = this.lambdaQuery()
+                .eq(LandAllocation::getLandId, landId)
+                .le(LandAllocation::getStartDate, newEndDate)
+                .ge(LandAllocation::getEndDate, newStartDate)
+                .count();
+        
+        if (count > 0) {
+            return Result.error("该地块在该时间段内已被分配");
+        }
+        
         return this.saveOrUpdate(landAllocation) ?
                 Result.ok() : Result.error("添加失败");
     }
@@ -273,6 +295,79 @@ public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper,
         Page<LandAllocationVo> landAllocationVoPage = new Page<>(pageNum, pageSize, total);
         landAllocationVoPage.setRecords(pagedList);
         return Result.ok(landAllocationVoPage);
+    }
+
+    @Override
+    public Result getMyLands() {
+        // 1. 从 ThreadLocal 获取当前用户ID
+        Long userId = UserHolder.getUserId();
+        if (userId == null) {
+            return Result.error("未登录或登录已过期");
+        }
+
+        // 2. 根据用户ID查询地块分配表，获取该用户分配的所有地块ID
+        List<LandAllocation> allocations = this.lambdaQuery()
+                .eq(LandAllocation::getContractorId, userId)
+                .list();
+
+        // 如果没有分配的地块，返回空列表
+        if (allocations.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+
+        // 3. 收集所有地块ID
+        ArrayList<Long> landIds = new ArrayList<>();
+        for (LandAllocation allocation : allocations) {
+            if (allocation.getLandId() != null) {
+                landIds.add(allocation.getLandId());
+            }
+        }
+
+        // 4. 批量查询地块信息
+        List<Land> lands = new ArrayList<>();
+        if (!landIds.isEmpty()) {
+            lands = landService.listByIds(landIds);
+        }
+
+        // 5. 构建地块Map便于查找
+        java.util.Map<Long, Land> landMap = lands.stream()
+                .collect(java.util.stream.Collectors.toMap(Land::getLandId, land -> land));
+
+        // 6. 根据地块ID去重，只保留最新的分配记录
+        java.util.Map<Long, LandAllocation> latestAllocationMap = new java.util.HashMap<>();
+        for (LandAllocation allocation : allocations) {
+            Long landId = allocation.getLandId();
+            if (landId != null) {
+                // 如果该地块还没有记录，或者当前记录的结束时间更晚，则更新
+                LandAllocation existing = latestAllocationMap.get(landId);
+                if (existing == null || 
+                    (allocation.getEndDate() != null && existing.getEndDate() != null && 
+                     allocation.getEndDate().after(existing.getEndDate()))) {
+                    latestAllocationMap.put(landId, allocation);
+                }
+            }
+        }
+
+        // 7. 构建 ContractorLandVo 列表
+        ArrayList<ContractorLandVo> voList = new ArrayList<>();
+        for (LandAllocation allocation : latestAllocationMap.values()) {
+            Land land = landMap.get(allocation.getLandId());
+            if (land != null) {
+                ContractorLandVo vo = new ContractorLandVo();
+                // 设置地块信息
+                vo.setLandId(land.getLandId());
+                vo.setLandName(land.getLandName());
+                vo.setLocation(land.getLocation());
+                vo.setArea(land.getArea());
+                vo.setSoilType(land.getSoilType());
+                // 设置分配日期
+                vo.setStartDate(allocation.getStartDate());
+                vo.setEndDate(allocation.getEndDate());
+                voList.add(vo);
+            }
+        }
+
+        return Result.ok(voList);
     }
 
 }

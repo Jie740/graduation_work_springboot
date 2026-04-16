@@ -52,4 +52,14 @@ public class EquipmentApplyController {
         return equipmentApplyService.getEquipmentNameAndTypeNameById(applyId);
     }
 
+    // 根据用户ID分页查询我的设备申请
+    @GetMapping("/getMyApplies/{pageNum}/{pageSize}")
+    public Result getMyApplies(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @PathVariable("pageNum") Integer pageNum,
+            @PathVariable("pageSize") Integer pageSize
+    ) {
+        return equipmentApplyService.getMyApplies(keyword, pageNum, pageSize);
+    }
+
 }

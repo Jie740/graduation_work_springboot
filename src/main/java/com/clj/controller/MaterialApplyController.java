@@ -48,4 +48,14 @@ public class MaterialApplyController {
     public Result updateApply(@RequestBody MaterialApplyDto materialApplyDto){
         return materialApplyService.updateApply(materialApplyDto);
     }
+
+    // 根据用户ID分页查询我的农资申请
+    @GetMapping("/getMyApplies/{pageNum}/{pageSize}")
+    public Result getMyApplies(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @PathVariable("pageNum") Integer pageNum,
+            @PathVariable("pageSize") Integer pageSize
+    ) {
+        return materialApplyService.getMyApplies(keyword, pageNum, pageSize);
+    }
 }

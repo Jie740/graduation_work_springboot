@@ -134,10 +134,38 @@ public class MatureCropServiceImpl extends ServiceImpl<MatureCropMapper, MatureC
 
     @Override
     public Result getStatistics(Long landId, String startDate, String endDate) {
-        // 查询所有成熟作物记录
-        List<MatureCrop> matureCrops = this.lambdaQuery()
-                .select(MatureCrop::getRecordId, MatureCrop::getOutputQuantity, MatureCrop::getHarvestTime)
-                .list();
+        // 解析日期参数
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+        LocalDate startLocalDate = null;
+        LocalDate endLocalDate = null;
+        
+        if (startDate != null && !startDate.isEmpty()) {
+            // 解析为 YearMonth，然后转换为当月的第一天
+            java.time.YearMonth startYearMonth = java.time.YearMonth.parse(startDate, formatter);
+            startLocalDate = startYearMonth.atDay(1);
+        }
+        if (endDate != null && !endDate.isEmpty()) {
+            // 解析为 YearMonth，然后转换为当月的最后一天
+            java.time.YearMonth endYearMonth = java.time.YearMonth.parse(endDate, formatter);
+            endLocalDate = endYearMonth.atEndOfMonth();
+        }
+        
+        // 构建查询条件，在数据库层面进行过滤
+        var queryWrapper = this.lambdaQuery()
+                .select(MatureCrop::getRecordId, MatureCrop::getOutputQuantity, MatureCrop::getHarvestTime);
+        
+        // 根据收割时间区间过滤
+        if (startLocalDate != null) {
+            Date startDateObj = java.sql.Date.valueOf(startLocalDate);
+            queryWrapper.ge(MatureCrop::getHarvestTime, startDateObj);
+        }
+        if (endLocalDate != null) {
+            // 结束日期设置为当天 23:59:59
+            Date endDateObj = java.sql.Timestamp.valueOf(endLocalDate.atTime(23, 59, 59));
+            queryWrapper.le(MatureCrop::getHarvestTime, endDateObj);
+        }
+        
+        List<MatureCrop> matureCrops = queryWrapper.list();
         
         if (matureCrops.isEmpty()) {
             return Result.ok(new MatureCropStatisticsVo());
@@ -148,6 +176,10 @@ public class MatureCropServiceImpl extends ServiceImpl<MatureCropMapper, MatureC
                 .map(MatureCrop::getRecordId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+        
+        if (recordIds.isEmpty()) {
+            return Result.ok(new MatureCropStatisticsVo());
+        }
         
         // 批量查询种植记录
         List<PlantingRecord> plantingRecords = plantingRecordMapper.selectBatchIds(new ArrayList<>(recordIds));
@@ -177,18 +209,6 @@ public class MatureCropServiceImpl extends ServiceImpl<MatureCropMapper, MatureC
         Map<Long, Crop> cropMap = crops.stream()
                 .collect(Collectors.toMap(Crop::getCropId, c -> c));
         
-        // 过滤数据（根据条件）
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate startLocalDate = null;
-        LocalDate endLocalDate = null;
-        
-        if (startDate != null && !startDate.isEmpty()) {
-            startLocalDate = LocalDate.parse(startDate, formatter);
-        }
-        if (endDate != null && !endDate.isEmpty()) {
-            endLocalDate = LocalDate.parse(endDate, formatter);
-        }
-        
         // 最终用于统计的数据列表
         List<MatureCropWithInfo> cropWithInfoList = new ArrayList<>();
         
@@ -201,21 +221,6 @@ public class MatureCropServiceImpl extends ServiceImpl<MatureCropMapper, MatureC
             // 根据地块ID 过滤
             if (landId != null && !landId.equals(plantingRecord.getLandId())) {
                 continue;
-            }
-            
-            // 根据日期范围过滤
-            if (matureCrop.getHarvestTime() != null) {
-                LocalDate harvestDate = LocalDate.ofInstant(
-                        matureCrop.getHarvestTime().toInstant(), 
-                        java.time.ZoneId.systemDefault()
-                );
-                
-                if (startLocalDate != null && harvestDate.isBefore(startLocalDate)) {
-                    continue;
-                }
-                if (endLocalDate != null && harvestDate.isAfter(endLocalDate)) {
-                    continue;
-                }
             }
             
             // 获取关联信息
@@ -236,7 +241,22 @@ public class MatureCropServiceImpl extends ServiceImpl<MatureCropMapper, MatureC
         
         return Result.ok(statisticsVo);
     }
-    
+
+    @Override
+    public Result getOutputQuantity(Long recordId) {
+        MatureCrop one = this.lambdaQuery()
+                .select(MatureCrop::getOutputQuantity)
+                .eq(MatureCrop::getRecordId, recordId)
+                .one();
+        BigDecimal outputQuantity = one.getOutputQuantity();
+        if (outputQuantity == null) {
+            return Result.ok();
+        }
+        HashMap<String, BigDecimal> map = new HashMap<>();
+        map.put("outputQuantity", outputQuantity);
+        return Result.ok(map);
+    }
+
     /**
      * 构建统计数据 VO
      */

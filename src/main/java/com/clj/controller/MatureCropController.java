@@ -45,4 +45,9 @@ public class MatureCropController {
         return matureCropService.getStatistics(landId, startDate, endDate);
     }
 
+    @GetMapping("/getOutputQuantity/{recordId}")
+    public Result getOutputQuantity(@PathVariable("recordId") Long recordId){
+        return matureCropService.getOutputQuantity(recordId);
+    }
+
 }

@@ -33,6 +33,15 @@ public class ContractorMaterialStockController {
     public Result getLandAllocationByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
         return contractorMaterialStockService.getByPage(pageNum, pageSize);
     }
+
+    //根据用户ID获取农资库存 信息
+    //keyword：农资名
+    @GetMapping("/getByUserId/{pageNum}/{pageSize}")
+    public Result getByUserId(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
+        return contractorMaterialStockService.getByUserId(keyword,pageNum,pageSize);
+    }
     @GetMapping("/searchLandAllocationInfoByPage/{keyword}/{pageNum}/{pageSize}")
     public Result searchLandAllocationInfoByPage(@PathVariable("keyword") String keyword,
                                                  @PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {

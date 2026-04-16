@@ -355,6 +355,52 @@ public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, M
             }
         }
     }
+
+    @Override
+    public Result getMyApplies(String keyword, Integer pageNum, Integer pageSize) {
+        // 1. 从 ThreadLocal 获取当前用户ID
+        Long userId = com.clj.utils.UserHolder.getUserId();
+        if (userId == null) {
+            return Result.error("未登录或登录已过期");
+        }
+
+        // 2. 构建查询条件
+        var queryWrapper = this.lambdaQuery()
+                .eq(MaterialApply::getApplicantId, userId)
+                .orderByDesc(MaterialApply::getApplyTime);
+
+        // 3. 如果有关键词，根据农资名模糊查询
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            // 先查询匹配的农资ID
+            List<Material> matchedMaterials = materialService.lambdaQuery()
+                    .like(Material::getMaterialName, keyword)
+                    .list();
+            
+            if (matchedMaterials.isEmpty()) {
+                Page<MaterialApplyVo> emptyPage = new Page<>(pageNum, pageSize, 0);
+                emptyPage.setRecords(new ArrayList<>());
+                return Result.ok(emptyPage);
+            }
+            
+            Set<Long> materialIds = matchedMaterials.stream()
+                    .map(Material::getMaterialId)
+                    .collect(Collectors.toSet());
+            
+            queryWrapper.in(MaterialApply::getMaterialId, materialIds);
+        }
+
+        // 4. 分页查询
+        Page<MaterialApply> page = queryWrapper.page(new Page<>(pageNum, pageSize));
+
+        // 5. 转换为 VO 列表
+        ArrayList<MaterialApplyVo> materialApplyVos = convertToMaterialApplyVos(page.getRecords());
+        fillUserInfo(materialApplyVos);
+        fillMaterialInfo(materialApplyVos);
+
+        Page<MaterialApplyVo> voPage = new Page<>(pageNum, pageSize, page.getTotal());
+        voPage.setRecords(materialApplyVos);
+        return Result.ok(voPage);
+    }
 }
 
 

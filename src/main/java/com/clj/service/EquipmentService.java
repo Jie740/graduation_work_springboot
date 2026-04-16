@@ -4,6 +4,8 @@ import com.clj.domain.Equipment;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.clj.utils.Result;
 
+import java.util.List;
+
 /**
 * @author ajie
 * @description 针对表【equipment(设备表)】的数据库操作Service

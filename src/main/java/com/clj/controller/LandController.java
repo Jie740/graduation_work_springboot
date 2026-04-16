@@ -3,6 +3,7 @@ package com.clj.controller;
 import com.clj.domain.Land;
 import com.clj.service.LandService;
 import com.clj.utils.Result;
+import com.clj.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,7 +15,6 @@ public class LandController {
 
     @PostMapping("/addLand")
     public Result addLand(@RequestBody Land land) {
-        System.out.println(land);
         return landService.addLand(land);
     }
 

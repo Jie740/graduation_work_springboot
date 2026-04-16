@@ -34,13 +34,17 @@ public class PlantingPlanAdjustController {
         return plantingPlanAdjustService.getPlantingPlanAdjustsByPage(pageNum, pageSize);
     }
 
+    @GetMapping("/cancel")
+    public Result cancel(@RequestParam("adjustId") Long adjustId){
+        return plantingPlanAdjustService.cancel(adjustId);
+    }
     //根据计划名和申请人姓名查询计划调整列表
-
-    @GetMapping("/searchPlantingPlanAdjustsByPage/{keyword}/{pageNum}/{pageSize}")
-    public Result searchPlantingPlanAdjustsByPage(@PathVariable("keyword") String keyword,
-                                                  @PathVariable("pageNum") Integer pageNum,
-                                                  @PathVariable("pageSize") Integer pageSize){
-        if (keyword == null){
+    @GetMapping("/searchPlantingPlanAdjustsByPage/{pageNum}/{pageSize}")
+    public Result searchPlantingPlanAdjustsByPage(
+            @PathVariable("pageNum") Integer pageNum,
+            @PathVariable("pageSize") Integer pageSize,
+            @RequestParam(value = "keyword", required = false) String keyword){
+        if (keyword == null || keyword.trim().isEmpty()){
             return plantingPlanAdjustService.getPlantingPlanAdjustsByPage(pageNum, pageSize);
         }
         return plantingPlanAdjustService.searchPlantingPlanAdjustsByPage(keyword, pageNum, pageSize);
@@ -49,5 +53,18 @@ public class PlantingPlanAdjustController {
     @GetMapping("/getPlantingPlanAdjustsByAdjust/{adjustId}")
     public Result getPlantingPlanAdjustsByAdjustId(@PathVariable("adjustId") Long adjustId){
         return plantingPlanAdjustService.getPlantingPlanAdjustsByAdjustId(adjustId);
+    }
+
+    //根据用户ID查询申请列表
+    @GetMapping("/getPlantingPlanAdjustsByUserIdPage/{pageNum}/{pageSize}")
+    public Result getPlantingPlanAdjustsByUserId(
+            @PathVariable("pageNum") Integer pageNum,
+            @PathVariable("pageSize") Integer pageSize,
+            @RequestParam(value = "keyword", required = false) String keyword
+    ){
+        if (keyword == null || keyword.trim().isEmpty()){
+            return plantingPlanAdjustService.getPlantingPlanAdjustsByUserIdPage(pageNum, pageSize);
+        }
+        return plantingPlanAdjustService.getPlantingPlanAdjustsByUser(keyword,pageNum, pageSize);
     }
 }

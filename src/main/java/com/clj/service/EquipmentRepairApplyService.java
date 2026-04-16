@@ -13,4 +13,6 @@ import com.clj.utils.Result;
 public interface EquipmentRepairApplyService extends IService<EquipmentRepairApply> {
 
     Result add(EquipmentRepairApplyDto equipmentRepairApplyDto);
+
+    Result getRepairApplyByRecordId(Long recordId, String applicantName, String phone);
 }

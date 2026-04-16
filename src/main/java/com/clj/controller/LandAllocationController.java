@@ -43,4 +43,9 @@ public class LandAllocationController {
         return landAllocationService.getContractorInfoByLandId(landId);
     }
 
+    @GetMapping("/getMyLands")
+    public Result getMyLands() {
+        return landAllocationService.getMyLands();
+    }
+
 }

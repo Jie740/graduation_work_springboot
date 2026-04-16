@@ -21,4 +21,8 @@ public interface EquipmentRecordService extends IService<EquipmentRecord> {
     Result searchByPage(String keyword, Integer pageNum, Integer pageSize);
 
     Result updateStatus(EquipmentRecordDto equipmentRecordDto);
+
+    Result getByUserId(String keyword, Integer pageNum, Integer pageSize);
+
+    Result getMyEquipment();
 }

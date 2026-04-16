@@ -21,4 +21,6 @@ public interface ContractorMaterialStockService extends IService<ContractorMater
     Result getByPage(Integer pageNum, Integer pageSize);
 
     Result searchByPage(String keyword, Integer pageNum, Integer pageSize);
+
+    Result getByUserId(String keyword,Integer pageNum,Integer pageSize);
 }

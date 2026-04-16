@@ -27,4 +27,9 @@ public interface UserService extends IService<User> {
     Result getContractorsByPage(Integer pageNum, Integer pageSize);
 
     Result searchContractorsByPage(String keyword, Integer pageNum, Integer pageSize);
+
+    Result getUserInfo();
+
+
+    Result getName();
 }

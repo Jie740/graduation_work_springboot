@@ -4,9 +4,11 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clj.domain.User;
+import com.clj.domain.vo.UserVo;
 import com.clj.service.UserService;
 import com.clj.mapper.UserMapper;
 import com.clj.utils.Result;
+import com.clj.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +48,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public Result updateUser(User user) {
+        // 1. 检查用户名是否被其他用户使用
+        if (user.getUsername() != null) {
+            User existingUser = this.lambdaQuery()
+                .eq(User::getUsername, user.getUsername())
+                .ne(User::getUserId, user.getUserId())  // 排除当前用户自己
+                .one();
+            
+            if (existingUser != null) {
+                return Result.error("用户名已存在");
+            }
+        }
+        
+        // 2. 执行更新
         return this.updateById(user) ? Result.ok() : Result.error("修改失败");
     }
 
@@ -109,8 +124,43 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 .likeRight(User::getPhone, keyword)
             .page(new Page<>(pageNum, pageSize)));
     }
+
+    @Override
+    public Result getUserInfo() {
+        // 1. 从 ThreadLocal 获取当前用户ID
+        Long userId = UserHolder.getUserId();
+        if (userId == null) {
+            return Result.error("未登录或登录已过期");
+        }
+
+        // 2. 查询用户信息
+        User user = this.getById(userId);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        // 3. 转换为 UserVO
+        UserVo userVo = BeanUtil.copyProperties(user, UserVo.class);
+
+        return Result.ok(userVo);
+    }
+
+    @Override
+    public Result getName() {
+        // 1. 从 ThreadLocal 获取当前用户ID
+        Long userId = UserHolder.getUserId();
+        if (userId == null) {
+            return Result.error("未登录或登录已过期");
+        }
+
+        // 2. 查询用户信息
+        User user = this.getById(userId);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        HashMap<String, String> map = new HashMap<>();
+        map.put("name", user.getName());
+        return Result.ok(map);
+    }
 }
-
-
-
-

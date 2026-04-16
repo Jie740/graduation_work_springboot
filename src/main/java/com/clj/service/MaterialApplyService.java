@@ -26,4 +26,6 @@ public interface MaterialApplyService extends IService<MaterialApply> {
     MaterialApplyVo getMaterialApplyVoById(Long applyId);
 
     Result updateApply(MaterialApplyDto materialApplyDto);
+
+    Result getMyApplies(String keyword, Integer pageNum, Integer pageSize);
 }

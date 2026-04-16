@@ -17,6 +17,8 @@ public class PlantingPlanAdjustDetailVo {
     private BigDecimal expectedOutput;
     private Date startTime;
     private Date endTime;
+    private String applicant;
+    private String phone;
     private String reason;
     private Date applyTime;
     private Integer status;

@@ -39,4 +39,9 @@ public class PlantingRecordController {
         return plantingRecordService.getGrowthPlantingRecordsByPage(pageNum, pageSize);
     }
 
+    @GetMapping("/getMyPlantingRecords/{pageNum}/{pageSize}")
+    public Result getMyPlantingRecords(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize){
+        return plantingRecordService.getMyPlantingRecords(pageNum, pageSize);
+    }
+
 }

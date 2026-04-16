@@ -29,4 +29,6 @@ public interface EquipmentApplyService extends IService<EquipmentApply> {
     EquipmentApplyVo getApplyVoById(Long applyId);
 
     Result getEquipmentNameAndTypeNameById(Long applyId);
+
+    Result getMyApplies(String keyword, Integer pageNum, Integer pageSize);
 }

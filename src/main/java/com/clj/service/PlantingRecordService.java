@@ -25,4 +25,6 @@ public interface PlantingRecordService extends IService<PlantingRecord> {
     Result getAllAndCrops();
 
     Result getGrowthPlantingRecordsByPage(Integer pageNum, Integer pageSize);
+
+    Result getMyPlantingRecords(Integer pageNum, Integer pageSize);
 }

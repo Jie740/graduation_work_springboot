@@ -62,4 +62,14 @@ public class UserController {
         return userService.searchContractorsByPage(keyword,pageNum, pageSize);
     }
 
+    @GetMapping("/getUserInfo")
+    public Result getUserInfo() {
+        return userService.getUserInfo();
+    }
+
+    @GetMapping("/getName")
+    public Result getName() {
+        return userService.getName();
+    }
+
 }

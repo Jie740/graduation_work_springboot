@@ -5,21 +5,26 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clj.constants.PlantingPlanConstants;
 import com.clj.domain.Crop;
 import com.clj.domain.Land;
+import com.clj.domain.LandAllocation;
 import com.clj.domain.PlantingPlan;
 import com.clj.domain.User;
 import com.clj.domain.dto.PlantingPlanDto;
 import com.clj.domain.vo.PlantingPlanVo;
 import com.clj.mapper.PlantingPlanMapper;
 import com.clj.service.CropService;
+import com.clj.service.LandAllocationService;
 import com.clj.service.LandService;
 import com.clj.service.PlantingPlanService;
 import com.clj.service.UserService;
 import com.clj.utils.Result;
+import com.clj.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,9 +41,19 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
     final UserService userService;
     final LandService landService;
     final CropService cropService;
+    final LandAllocationService landAllocationService;
 
     @Override
     public Result add(PlantingPlanDto plantingPlanDto) {
+        //查询角色是否为企业管理员或系统管理员
+        Long userId = UserHolder.getUserId();
+        if (userId== null){
+            return Result.error("请先登录");
+        }
+        User user = userService.getById(userId);
+        if (user == null || (!"enterprise_admin".equals(user.getRole()) && !"system_admin".equals(user.getRole()))){
+            return Result.error("无权限");
+        }
         //查询计划名是否存在
         PlantingPlan plantingPlan1 = this.lambdaQuery().eq(PlantingPlan::getPlanName, plantingPlanDto.getPlanName())
                 .one();
@@ -72,6 +87,7 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
         Long cropId = crop.getCropId();
 
         PlantingPlan plantingPlan = new PlantingPlan();
+        plantingPlan.setCreatorId(userId);
         plantingPlan.setLandId(landId);
         plantingPlan.setCropId(cropId);
 
@@ -81,12 +97,28 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
     }
 
     @Override
+    @Transactional
     public Result delete(Long id) {
         return this.removeById(id)?Result.ok():Result.error("删除失败");
     }
 
     @Override
     public Result updatePlantingPlan(PlantingPlan plantingPlan) {
+        PlantingPlan plantingPlan1 = this.lambdaQuery().eq(PlantingPlan::getPlanId, plantingPlan.getPlanId()).one();
+        Integer oldStatus = plantingPlan1.getStatus();
+        Integer newStatus = plantingPlan.getStatus();
+        if (oldStatus!=1){
+            if (newStatus==1){
+                //先查询对应地块是否有正在执行的计划 如果有 则提示不能发布 已有计划
+                Long landId = plantingPlan1.getLandId();
+                boolean exists = this.lambdaQuery().eq(PlantingPlan::getLandId, landId)
+                        .eq(PlantingPlan::getStatus, 1)
+                        .exists();
+                if (exists){
+                    return Result.error("该地块已有计划正在执行");
+                }
+            }
+        }
         return this.updateById(plantingPlan)?Result.ok():Result.error("修改失败");
     }
 
@@ -195,6 +227,24 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
 
     @Override
     public Result updateStatus(Long planId, Integer status) {
+        //发布计划
+        //先获取当前计划状态
+        Integer oldStatus = this.lambdaQuery().eq(PlantingPlan::getPlanId, planId)
+                .one().getStatus();
+        if (oldStatus!=1){
+            if (status==1){
+                //先查询对应地块是否有正在执行的计划 如果有 则提示不能发布 已有计划
+                PlantingPlan plantingplan = this.lambdaQuery().eq(PlantingPlan::getPlanId, planId).one();
+                Long landId = plantingplan.getLandId();
+                boolean exists = this.lambdaQuery().eq(PlantingPlan::getLandId, landId)
+                        .eq(PlantingPlan::getStatus, 1)
+                        .exists();
+                if (exists){
+                    return Result.error("该地块已有计划正在执行");
+                }
+            }
+        }
+
         return this.lambdaUpdate().eq(PlantingPlan::getPlanId, planId)
                 .set(PlantingPlan::getStatus, status)
                 .update()?Result.ok():Result.error("修改失败");
@@ -284,6 +334,160 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
         PlantingPlan plantingPlan = this.lambdaQuery().eq(PlantingPlan::getLandId, landId)
                 .eq(PlantingPlan::getStatus, PlantingPlanConstants.PUBLISH).one();
         return plantingPlan == null?Result.error("该地块没有种植计划"):Result.ok(plantingPlan);
+    }
+
+    @Override
+    public Result getMyPlans() {
+        Long userId = UserHolder.getUserId();
+        if (userId == null){
+            return Result.error("请先登录");
+        }
+
+        // 1. 根据用户ID查询地块分配表，获取该用户分配的地块ID列表
+        List<LandAllocation> allocations = landAllocationService.lambdaQuery()
+                .eq(LandAllocation::getContractorId, userId)
+                .list();
+
+        // 如果没有分配的地块，返回空列表
+        if (allocations.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+
+        // 2. 收集所有地块ID
+        ArrayList<Long> landIds = new ArrayList<>();
+        for (LandAllocation allocation : allocations) {
+            if (allocation.getLandId() != null) {
+                landIds.add(allocation.getLandId());
+            }
+        }
+
+        // 3. 根据地块ID列表查询种植计划
+        List<PlantingPlan> plantingPlans = new ArrayList<>();
+        if (!landIds.isEmpty()) {
+            plantingPlans = this.lambdaQuery()
+                    .in(PlantingPlan::getLandId, landIds)
+                    .list();
+        }
+
+        // 4. 转换为 VO 列表
+        List<PlantingPlanVo> voList = new ArrayList<>();
+        for (PlantingPlan plantingPlan : plantingPlans) {
+            PlantingPlanVo vo = new PlantingPlanVo();
+            BeanUtils.copyProperties(plantingPlan, vo);
+
+            // 根据 landId 查询地块信息
+            if (plantingPlan.getLandId() != null) {
+                Land land = landService.getById(plantingPlan.getLandId());
+                if (land != null) {
+                    vo.setLandName(land.getLandName());
+                    vo.setLandLocation(land.getLocation());
+                    vo.setLandArea(land.getArea());
+                }
+            }
+
+            // 根据 cropId 查询农作物信息
+            if (plantingPlan.getCropId() != null) {
+                Crop crop = cropService.getById(plantingPlan.getCropId());
+                if (crop != null) {
+                    vo.setCropName(crop.getCropName());
+                }
+            }
+
+            // 根据 creatorId 查询创建人信息
+            if (plantingPlan.getCreatorId() != null) {
+                User user = userService.getById(plantingPlan.getCreatorId());
+                if (user != null) {
+                    vo.setCreator(user.getName());
+                }
+            }
+
+            voList.add(vo);
+        }
+
+        return Result.ok(voList);
+    }
+
+    @Override
+    public Result getPublishedPlantingPlanByUserId() {
+        // 1. 从 ThreadLocal 获取当前用户ID
+        Long userId = UserHolder.getUserId();
+        if (userId == null) {
+            return Result.error("未登录或登录已过期");
+        }
+    
+        // 2. 根据用户ID查询地块分配表，获取该用户分配的地块ID列表
+        List<LandAllocation> allocations = landAllocationService.lambdaQuery()
+                .eq(LandAllocation::getContractorId, userId)
+                .list();
+    
+        // 如果没有分配的地块，返回空列表
+        if (allocations.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+    
+        // 3. 收集所有地块ID
+        List<Long> landIds = allocations.stream()
+                .map(LandAllocation::getLandId)
+                .filter(landId -> landId != null)
+                .collect(Collectors.toList());
+    
+        // 4. 根据地块ID列表查询正在执行（status=1）的种植计划
+        List<PlantingPlan> list = new ArrayList<>();
+        if (!landIds.isEmpty()) {
+            list = this.lambdaQuery()
+                    .in(PlantingPlan::getLandId, landIds)
+                    .eq(PlantingPlan::getStatus, PlantingPlanConstants.PUBLISH)
+                    .list();
+        }
+    
+        // 5. 转换为 VO 列表
+        List<PlantingPlanVo> voList = new ArrayList<>();
+        for (PlantingPlan plantingPlan : list) {
+            PlantingPlanVo vo = new PlantingPlanVo();
+            // 复制基本属性
+            BeanUtils.copyProperties(plantingPlan, vo);
+    
+            // 根据 landId 查询地块信息
+            if (plantingPlan.getLandId() != null) {
+                Land land = landService.getById(plantingPlan.getLandId());
+                if (land != null) {
+                    vo.setLandName(land.getLandName());
+                    vo.setLandLocation(land.getLocation());
+                    vo.setLandArea(land.getArea());
+                }
+            }
+    
+            // 根据 cropId 查询农作物信息
+            if (plantingPlan.getCropId() != null) {
+                Crop crop = cropService.getById(plantingPlan.getCropId());
+                if (crop != null) {
+                    vo.setCropName(crop.getCropName());
+                }
+            }
+    
+            // 根据 creatorId 查询创建人信息
+            if (plantingPlan.getCreatorId() != null) {
+                User user = userService.getById(plantingPlan.getCreatorId());
+                if (user != null) {
+                    vo.setCreator(user.getName());
+                }
+            }
+    
+            voList.add(vo);
+        }
+        return Result.ok(voList);
+    }
+
+    @Override
+    public Result getUserNameByPlanId(Long planId) {
+        PlantingPlan plantingPlan = this.lambdaQuery().eq(PlantingPlan::getPlanId, planId)
+                .one();
+        Long creatorId = plantingPlan.getCreatorId();
+        User user = userService.lambdaQuery().eq(User::getUserId, creatorId)
+                .one();
+        HashMap<String, String> map = new HashMap<>();
+        map.put("creator", user.getName());
+        return Result.ok(map);
     }
 }
 

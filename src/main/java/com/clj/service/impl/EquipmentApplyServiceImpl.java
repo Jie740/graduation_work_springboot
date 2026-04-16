@@ -268,6 +268,90 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
         equipmentDetailVo.setTypeName(one2.getEquipmentTypeName());
         return Result.ok(equipmentDetailVo);
     }
+
+    @Override
+    public Result getMyApplies(String keyword, Integer pageNum, Integer pageSize) {
+        // 1. 从 ThreadLocal 获取当前用户ID
+        Long userId = com.clj.utils.UserHolder.getUserId();
+        if (userId == null) {
+            return Result.error("未登录或登录已过期");
+        }
+
+        // 2. 构建查询条件
+        var queryWrapper = this.lambdaQuery()
+                .eq(EquipmentApply::getApplicantId, userId)
+                .orderByDesc(EquipmentApply::getApplyTime);
+
+        // 3. 如果有关键词，根据设备名模糊查询
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            // 先查询匹配的设备ID
+            List<Equipment> matchedEquipments = equipmentService.lambdaQuery()
+                    .like(Equipment::getEquipmentName, keyword)
+                    .list();
+            
+            if (matchedEquipments.isEmpty()) {
+                Page<EquipmentApplyVo> emptyPage = new Page<>(pageNum, pageSize, 0);
+                emptyPage.setRecords(new ArrayList<>());
+                return Result.ok(emptyPage);
+            }
+            
+            Set<Long> equipmentIds = matchedEquipments.stream()
+                    .map(Equipment::getEquipmentId)
+                    .collect(Collectors.toSet());
+            
+            queryWrapper.in(EquipmentApply::getEquipmentId, equipmentIds);
+        }
+
+        // 4. 分页查询
+        Page<EquipmentApply> page = queryWrapper.page(new Page<>(pageNum, pageSize));
+
+        // 5. 批量查询申请人和设备信息
+        List<EquipmentApply> applies = page.getRecords();
+        Set<Long> applicantIds = applies.stream()
+                .map(EquipmentApply::getApplicantId)
+                .collect(Collectors.toSet());
+        Set<Long> applyEquipmentIds = applies.stream()
+                .map(EquipmentApply::getEquipmentId)
+                .collect(Collectors.toSet());
+
+        // 6. 批量查询用户列表和设备列表
+        List<User> userList = userService.lambdaQuery()
+                .in(User::getUserId, applicantIds)
+                .list();
+        List<Equipment> equipmentList = equipmentService.lambdaQuery()
+                .in(Equipment::getEquipmentId, applyEquipmentIds)
+                .list();
+
+        // 7. 构建映射关系
+        java.util.Map<Long, User> userMap = userList.stream()
+                .collect(Collectors.toMap(User::getUserId, user -> user));
+        java.util.Map<Long, Equipment> equipmentMap = equipmentList.stream()
+                .collect(Collectors.toMap(Equipment::getEquipmentId, equipment -> equipment));
+
+        // 8. 组装 VO 对象
+        ArrayList<EquipmentApplyVo> equipmentApplyVos = new ArrayList<>();
+        for (EquipmentApply apply : applies) {
+            EquipmentApplyVo equipmentApplyVo = new EquipmentApplyVo();
+            BeanUtils.copyProperties(apply, equipmentApplyVo);
+
+            User user = userMap.get(apply.getApplicantId());
+            if (user != null) {
+                equipmentApplyVo.setApplicant(user.getName());
+                equipmentApplyVo.setPhone(user.getPhone());
+            }
+
+            Equipment equipment = equipmentMap.get(apply.getEquipmentId());
+            if (equipment != null) {
+                equipmentApplyVo.setEquipmentName(equipment.getEquipmentName());
+            }
+
+            equipmentApplyVos.add(equipmentApplyVo);
+        }
+
+        Page<EquipmentApplyVo> equipmentApplyVoPage = new Page<>(pageNum, pageSize, page.getTotal());
+        equipmentApplyVoPage.setRecords(equipmentApplyVos);
+        return Result.ok(equipmentApplyVoPage);
+    }
 }
 
 

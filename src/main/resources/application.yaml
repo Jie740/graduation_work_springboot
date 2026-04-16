@@ -1,6 +1,13 @@
 server:
   port: 8080
+  tomcat:
+    response-buffer-size: 0
 
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 spring:
   application:
     name: AgriculturalSystemApplication

@@ -45,4 +45,5 @@ public class EquipmentController {
         return equipmentService.getEquipmentTypeNameById(equipmentId);
     }
 
+
 }

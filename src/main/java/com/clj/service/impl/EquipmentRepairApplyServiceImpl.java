@@ -6,6 +6,7 @@ import com.clj.domain.EquipmentRecord;
 import com.clj.domain.EquipmentRepairApply;
 import com.clj.domain.User;
 import com.clj.domain.dto.EquipmentRepairApplyDto;
+import com.clj.domain.vo.EquipmentRepairApplyVo;
 import com.clj.service.EquipmentRepairApplyService;
 import com.clj.mapper.EquipmentRepairApplyMapper;
 import com.clj.service.UserService;
@@ -83,6 +84,59 @@ public class EquipmentRepairApplyServiceImpl extends ServiceImpl<EquipmentRepair
         }
         
         return Result.ok();
+    }
+
+    @Override
+    public Result getRepairApplyByRecordId(Long recordId, String applicantName, String phone) {
+        // 1. 根据设备记录ID查询设备ID
+        EquipmentRecord equipmentRecord = equipmentRecordService.lambdaQuery()
+                .eq(EquipmentRecord::getRecordId, recordId)
+                .one();
+        
+        if (equipmentRecord == null) {
+            return Result.error("设备记录不存在");
+        }
+        
+        Long equipmentId = equipmentRecord.getEquipmentId();
+        
+        // 2. 根据用户姓名和电话查询用户ID
+        User user = userService.lambdaQuery()
+                .eq(User::getName, applicantName)
+                .eq(User::getPhone, phone)
+                .one();
+        
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+        
+        Long applicantId = user.getUserId();
+        
+        // 3. 根据设备ID和申请人ID查询报修申请记录
+        EquipmentRepairApply repairApply = this.lambdaQuery()
+                .eq(EquipmentRepairApply::getEquipmentId, equipmentId)
+                .eq(EquipmentRepairApply::getApplicantId, applicantId)
+                .orderByDesc(EquipmentRepairApply::getApplyTime)
+                .last("LIMIT 1")
+                .one();
+        
+        if (repairApply == null) {
+            return Result.error("未找到报修申请记录");
+        }
+        
+        // 4. 查询设备名称
+        Equipment equipment = equipmentService.getById(equipmentId);
+        if (equipment == null) {
+            return Result.error("设备不存在");
+        }
+        
+        // 5. 构建 VO 对象
+        EquipmentRepairApplyVo vo = new EquipmentRepairApplyVo();
+        vo.setApplicantName(applicantName);
+        vo.setPhone(phone);
+        vo.setEquipmentName(equipment.getEquipmentName());
+        vo.setFaultDescription(repairApply.getFaultDescription());
+        
+        return Result.ok(vo);
     }
 }
 
