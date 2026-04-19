@@ -16,4 +16,5 @@ public class FarmOperationRecordVo {
     private Integer quantity;
     private String description;
     private Date operationTime;
+    private java.math.BigDecimal outputQuantity;
 }

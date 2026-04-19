@@ -13,10 +13,11 @@
             <result property="quantity" column="quantity" />
             <result property="userId" column="user_id" />
             <result property="operationTime" column="operation_time" />
+            <result property="outputQuantity" column="output_quantity" />
     </resultMap>
 
     <sql id="Base_Column_List">
         operation_id,record_id,operation_type,description,material_id,quantity,
-        user_id,operation_time
+        user_id,operation_time,output_quantity
     </sql>
 </mapper>

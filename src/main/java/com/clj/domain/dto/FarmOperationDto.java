@@ -1,5 +1,6 @@
 package com.clj.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -16,5 +17,7 @@ public class FarmOperationDto {
     private Long materialId;
     private Integer quantity;
     private String description;
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date operationTime;
+    private BigDecimal outputQuantity;
 }

@@ -6,6 +6,7 @@ import com.clj.domain.Crop;
 import com.clj.domain.Land;
 import com.clj.domain.MatureCrop;
 import com.clj.domain.PlantingRecord;
+import com.clj.domain.dto.MatureCropUpdateDto;
 import com.clj.domain.vo.MatureCropStatisticsVo;
 import com.clj.domain.vo.MatureCropVo;
 import com.clj.service.CropService;
@@ -255,6 +256,35 @@ public class MatureCropServiceImpl extends ServiceImpl<MatureCropMapper, MatureC
         HashMap<String, BigDecimal> map = new HashMap<>();
         map.put("outputQuantity", outputQuantity);
         return Result.ok(map);
+    }
+
+    @Override
+    public Result updateMatureCrop(MatureCropUpdateDto matureCropUpdateDto) {
+        if (matureCropUpdateDto.getMatureCropId() == null) {
+            return Result.error("成熟作物ID不能为空");
+        }
+        
+        MatureCrop matureCrop = this.getById(matureCropUpdateDto.getMatureCropId());
+        if (matureCrop == null) {
+            return Result.error("该成熟作物记录不存在");
+        }
+        
+        // 只更新非空字段
+        boolean needUpdate = false;
+        if (matureCropUpdateDto.getOutputQuantity() != null) {
+            matureCrop.setOutputQuantity(matureCropUpdateDto.getOutputQuantity());
+            needUpdate = true;
+        }
+        if (matureCropUpdateDto.getHarvestTime() != null) {
+            matureCrop.setHarvestTime(matureCropUpdateDto.getHarvestTime());
+            needUpdate = true;
+        }
+        
+        if (!needUpdate) {
+            return Result.error("没有需要更新的字段");
+        }
+        
+        return this.updateById(matureCrop) ? Result.ok() : Result.error("更新失败");
     }
 
     /**

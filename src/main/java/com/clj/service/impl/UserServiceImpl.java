@@ -163,4 +163,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         map.put("name", user.getName());
         return Result.ok(map);
     }
+
+    @Override
+    public Result updatePassword(String oldPassword, String newPassword) {
+        // 1. 从 ThreadLocal 获取当前用户ID
+        Long userId = UserHolder.getUserId();
+        if (userId == null) {
+            return Result.error("未登录或登录已过期");
+        }
+
+        // 2. 查询用户信息
+        User user = this.getById(userId);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        // 3. 验证旧密码
+        if (!oldPassword.equals(user.getPassword())) {
+            return Result.error("旧密码错误");
+        }
+
+        // 4. 更新新密码
+        boolean updated = this.lambdaUpdate()
+                .eq(User::getUserId, userId)
+                .set(User::getPassword, newPassword)
+                .update();
+
+        return updated ? Result.ok("密码修改成功") : Result.error("密码修改失败");
+    }
 }

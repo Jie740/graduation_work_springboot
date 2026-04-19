@@ -2,6 +2,7 @@ package com.clj.service;
 
 import com.clj.domain.MatureCrop;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.domain.dto.MatureCropUpdateDto;
 import com.clj.utils.Result;
 
 /**
@@ -25,4 +26,6 @@ public interface MatureCropService extends IService<MatureCrop> {
     Result getStatistics(Long landId, String startDate, String endDate);
 
     Result getOutputQuantity(Long recordId);
+
+    Result updateMatureCrop(MatureCropUpdateDto matureCropUpdateDto);
 }

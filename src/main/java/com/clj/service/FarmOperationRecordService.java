@@ -17,4 +17,6 @@ public interface FarmOperationRecordService extends IService<FarmOperationRecord
     Result getFarmOperationRecordById(Long recordId, Integer page, Integer size);
 
     Result updateFamrOperation(FarmOperationDto farmOperationDto);
+
+    Result delete(Long operationId);
 }

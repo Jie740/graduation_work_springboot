@@ -3,9 +3,13 @@ package com.clj.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clj.domain.Equipment;
+import com.clj.domain.EquipmentApply;
+import com.clj.domain.EquipmentRecord;
 import com.clj.domain.EquipmentType;
 import com.clj.domain.vo.EquipmentVo;
+import com.clj.mapper.EquipmentApplyMapper;
 import com.clj.mapper.EquipmentMapper;
+import com.clj.mapper.EquipmentRecordMapper;
 import com.clj.service.EquipmentService;
 import com.clj.service.EquipmentTypeService;
 import com.clj.utils.Result;
@@ -13,6 +17,7 @@ import com.clj.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,15 +35,38 @@ import java.util.stream.Collectors;
 public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment>
     implements EquipmentService{
     final EquipmentTypeService equipmentTypeService;
+    final EquipmentRecordMapper equipmentRecordMapper;
+    final EquipmentApplyMapper equipmentApplyMapper;
 
     @Override
     public Result add(Equipment equipment) {
-        return this.save(equipment)?Result.ok():Result.error("添加失败");
+        // 检查设备名是否已存在
+        Equipment existingEquipment = this.lambdaQuery()
+                .eq(Equipment::getEquipmentName, equipment.getEquipmentName())
+                .one();
+        if (existingEquipment != null) {
+            return Result.error("设备名已存在");
+        }
+        return this.save(equipment) ? Result.ok() : Result.error("添加失败");
     }
 
     @Override
+    @Transactional
     public Result delete(Long equipmentId) {
-        return this.removeById(equipmentId)?Result.ok():Result.error("删除失败");
+        // 先删除该设备的承包人借用记录
+        equipmentRecordMapper.delete(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<EquipmentRecord>()
+                        .eq(EquipmentRecord::getEquipmentId, equipmentId)
+        );
+        
+        // 删除该设备的申请记录
+        equipmentApplyMapper.delete(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<EquipmentApply>()
+                        .eq(EquipmentApply::getEquipmentId, equipmentId)
+        );
+        
+        // 再删除设备
+        return this.removeById(equipmentId) ? Result.ok() : Result.error("删除失败");
     }
 
     @Override
@@ -106,9 +134,15 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
             return Result.error("设备不存在");
         }
         Long equipmentTypeId = equipment.getEquipmentTypeId();
-        EquipmentType equipmentType = equipmentTypeService.getById(equipmentTypeId);
+        String typeName = null;
+        if (equipmentTypeId != null) {
+            EquipmentType equipmentType = equipmentTypeService.getById(equipmentTypeId);
+            if (equipmentType != null) {
+                typeName = equipmentType.getEquipmentTypeName();
+            }
+        }
         HashMap<String, String> map = new HashMap<>();
-        map.put("typeName", equipmentType.getEquipmentTypeName());
+        map.put("typeName", typeName);
         return Result.ok(map);
     }
 

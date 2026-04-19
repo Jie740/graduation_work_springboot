@@ -12,4 +12,10 @@ import com.clj.utils.Result;
 public interface MaterialStockRecordService extends IService<MaterialStockRecord> {
 
     Result add(MaterialStockRecord materialStockRecord);
+
+    Result delete(Long stockRecordId);
+
+    Result update(MaterialStockRecord materialStockRecord);
+
+    Result getByPage(String keyword, Integer pageNum, Integer pageSize);
 }

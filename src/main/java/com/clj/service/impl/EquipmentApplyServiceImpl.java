@@ -262,10 +262,16 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
         Long equipmentId = one.getEquipmentId();
         Equipment one1 = equipmentService.lambdaQuery().eq(Equipment::getEquipmentId, equipmentId).one();
         Long equipmentTypeId = one1.getEquipmentTypeId();
-        EquipmentType one2 = equipmentTypeService.lambdaQuery().eq(EquipmentType::getEquipmentTypeId, equipmentTypeId).one();
+        String typeName = null;
+        if (equipmentTypeId != null) {
+            EquipmentType one2 = equipmentTypeService.lambdaQuery().eq(EquipmentType::getEquipmentTypeId, equipmentTypeId).one();
+            if (one2 != null) {
+                typeName = one2.getEquipmentTypeName();
+            }
+        }
         equipmentDetailVo.setEquipmentId(equipmentId);
         equipmentDetailVo.setEquipmentName(one1.getEquipmentName());
-        equipmentDetailVo.setTypeName(one2.getEquipmentTypeName());
+        equipmentDetailVo.setTypeName(typeName);
         return Result.ok(equipmentDetailVo);
     }
 

@@ -72,4 +72,11 @@ public class UserController {
         return userService.getName();
     }
 
+    @PutMapping("/updatePassword")
+    public Result updatePassword(@RequestBody java.util.HashMap<String, String> params) {
+        String oldPassword = params.get("oldPassword");
+        String newPassword = params.get("newPassword");
+        return userService.updatePassword(oldPassword, newPassword);
+    }
+
 }

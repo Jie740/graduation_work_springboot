@@ -45,38 +45,6 @@ public class PlantingRecordServiceImpl extends ServiceImpl<PlantingRecordMapper,
     public Result updatePlantingRecord(PlantingRecordDto plantingRecordDto) {
         //编辑为已成熟
         if (plantingRecordDto.getStatus() != null && plantingRecordDto.getStatus() == 1){
-            // 校验产出值是否合法
-            if (plantingRecordDto.getOutputQuantity() == null || plantingRecordDto.getOutputQuantity().compareTo(java.math.BigDecimal.ZERO) <= 0) {
-                return Result.error("产出值必须大于0");
-            }
-            
-            // 校验收割时间
-            if (plantingRecordDto.getActualHarvestDate() == null) {
-                return Result.error("收割时间不能为空");
-            }
-            
-            // 查询该种植记录是否已经存在成熟作物记录
-            MatureCrop existingMatureCrop = matureCropService.lambdaQuery()
-                    .eq(MatureCrop::getRecordId, plantingRecordDto.getRecordId())
-                    .one();
-            
-            if (existingMatureCrop != null) {
-                // 如果已存在，则更新成熟作物表的产出和收割时间
-                existingMatureCrop.setOutputQuantity(plantingRecordDto.getOutputQuantity());
-                existingMatureCrop.setHarvestTime(plantingRecordDto.getActualHarvestDate());
-                boolean updateResult = matureCropService.updateById(existingMatureCrop);
-                if (!updateResult) {
-                    return Result.error("更新成熟作物记录失败");
-                }
-            } else {
-                // 如果不存在，则添加新的成熟作物记录
-                MatureCrop matureCrop = new MatureCrop();
-                matureCrop.setRecordId(plantingRecordDto.getRecordId());
-                matureCrop.setOutputQuantity(plantingRecordDto.getOutputQuantity());
-                matureCrop.setHarvestTime(plantingRecordDto.getActualHarvestDate());
-                matureCropService.add(matureCrop);
-            }
-
             //修改计划表状态为已完成
             if (plantingRecordDto.getPlanId() != null) {
                 plantingPlanService.updateStatus(plantingRecordDto.getPlanId(), 3);

@@ -32,4 +32,6 @@ public interface UserService extends IService<User> {
 
 
     Result getName();
+
+    Result updatePassword(String oldPassword, String newPassword);
 }

@@ -49,8 +49,8 @@
             <option name="tableUIInfoList">
               <list>
                 <TableUIInfo>
-                  <option name="className" value="Land" />
-                  <option name="tableName" value="land" />
+                  <option name="className" value="FarmOperationRecord" />
+                  <option name="tableName" value="farm_operation_record" />
                 </TableUIInfo>
               </list>
             </option>

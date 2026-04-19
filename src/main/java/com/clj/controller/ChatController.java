@@ -66,4 +66,38 @@ public class ChatController {
         }
         return null;
     }
+
+    /**
+     * 获取用户对话上下文
+     * @param request HTTP请求对象，用于从请求头获取token
+     * @return 对话历史列表
+     */
+    @GetMapping("/history")
+    public Result getHistory(HttpServletRequest request) {
+        String token = extractToken(request);
+        Long userId = JwtUtils.getUserId(token);
+        
+        if (userId == null) {
+            return Result.error("无效的token或token已过期");
+        }
+        
+        return dashScopeService.getChatHistory(userId.toString());
+    }
+
+    /**
+     * 清空用户对话上下文
+     * @param request HTTP请求对象，用于从请求头获取token
+     * @return 操作结果
+     */
+    @DeleteMapping("/clear")
+    public Result clearHistory(HttpServletRequest request) {
+        String token = extractToken(request);
+        Long userId = JwtUtils.getUserId(token);
+        
+        if (userId == null) {
+            return Result.error("无效的token或token已过期");
+        }
+        
+        return dashScopeService.clearChatHistory(userId.toString());
+    }
 }

@@ -1,6 +1,7 @@
 package com.clj.controller;
 
 import com.clj.domain.MatureCrop;
+import com.clj.domain.dto.MatureCropUpdateDto;
 import com.clj.service.MatureCropService;
 import com.clj.utils.Result;
 import lombok.RequiredArgsConstructor;
@@ -19,13 +20,15 @@ public class MatureCropController {
         return matureCropService.getMatureCropsByPage(pageNum, pageSize);
     }
 
+
+
     @PutMapping("/update")
-    public Result update(@RequestBody MatureCrop matureCrop){
-        return matureCropService.updateById(matureCrop)?Result.ok():Result.error("更新失败");
+    public Result update(@RequestBody MatureCropUpdateDto matureCropUpdateDto){
+        return matureCropService.updateMatureCrop(matureCropUpdateDto);
     }
 
     @DeleteMapping("/delete/{matureCropId}")
-    public Result delete(@PathVariable("matureCropId") Integer id){
+    public Result delete(@PathVariable("matureCropId") Long id){
         return matureCropService.removeById(id)?Result.ok():Result.error("删除失败");
     }
 

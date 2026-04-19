@@ -29,7 +29,7 @@ public class FarmOperationRecordController {
 
     @DeleteMapping("/delete/{operationId}")
     public Result delete(@PathVariable("operationId") Long operationId){
-        return farmOperationRecordService.removeById(operationId)? Result.ok() : Result.error("删除失败");
+        return farmOperationRecordService.delete(operationId);
     }
 
     @PutMapping("/update")

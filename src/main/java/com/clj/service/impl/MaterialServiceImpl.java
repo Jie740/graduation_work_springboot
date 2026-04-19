@@ -3,10 +3,14 @@ package com.clj.service.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.clj.domain.ContractorMaterialStock;
 import com.clj.domain.Material;
+import com.clj.domain.MaterialApply;
 import com.clj.domain.MaterialStockRecord;
 import com.clj.domain.MaterialType;
 import com.clj.domain.vo.MaterialVo;
+import com.clj.mapper.ContractorMaterialStockMapper;
+import com.clj.mapper.MaterialApplyMapper;
 import com.clj.service.MaterialService;
 import com.clj.mapper.MaterialMapper;
 import com.clj.service.MaterialStockRecordService;
@@ -32,6 +36,8 @@ public class MaterialServiceImpl extends ServiceImpl<MaterialMapper, Material>
     implements MaterialService{
     final MaterialTypeService materialTypeService;
     final MaterialStockRecordService materialStockRecordService;
+    final MaterialApplyMapper materialApplyMapper;
+    final ContractorMaterialStockMapper contractorMaterialStockMapper;
 
 
     @Override
@@ -70,6 +76,19 @@ public class MaterialServiceImpl extends ServiceImpl<MaterialMapper, Material>
 
     @Override
     public Result delete(Long materialId) {
+        // 删除农资审批表中对应的记录
+        materialApplyMapper.delete(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<MaterialApply>()
+                .eq(MaterialApply::getMaterialId, materialId)
+        );
+        
+        // 删除承包人农资库存表中对应的记录
+        contractorMaterialStockMapper.delete(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ContractorMaterialStock>()
+                .eq(ContractorMaterialStock::getMaterialId, materialId)
+        );
+        
+        // 删除农资记录
         return this.removeById(materialId)? Result.ok() : Result.error("删除失败");
     }
 

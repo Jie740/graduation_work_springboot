@@ -75,6 +75,21 @@ public class DashScopeService {
             
             if (cachedAnswer != null) {
                 log.info("命中常见问题缓存: {}", normalizedQuestion);
+                
+                // ================== ⭐ 保存命中缓存的问答到用户上下文 ==================
+                saveMessage(redisKey, Message.builder()
+                        .role(Role.USER.getValue())
+                        .content(userQuestion)
+                        .build());
+                
+                saveMessage(redisKey, Message.builder()
+                        .role(Role.ASSISTANT.getValue())
+                        .content(cachedAnswer)
+                        .build());
+                
+                // 控制长度
+                trimHistory(redisKey);
+                
                 HashMap<String, String> map = new HashMap<>();
                 map.put("message", cachedAnswer);
                 map.put("fromCache", "true");
@@ -192,7 +207,7 @@ public class DashScopeService {
      */
     private void saveMessage(String key, Message message) {
         redisTemplate.opsForList().rightPush(key, JSONUtil.toJsonStr(message));
-        redisTemplate.expire(key, 1, TimeUnit.HOURS);
+        redisTemplate.expire(key, 7, TimeUnit.DAYS);
     }
 
     /**
@@ -217,5 +232,46 @@ public class DashScopeService {
         return question.trim()
                 .replaceAll("\\s+", "")  // 去除所有空格
                 .replaceAll("[\uff0c\uff0e\uff1f\uff01\u3001]", ""); // 去除中文标点
+    }
+
+    /**
+     * 获取用户对话上下文
+     */
+    public Result getChatHistory(String userId) {
+        String redisKey = CHAT_PREFIX + userId;
+        List<String> historyJsonList = redisTemplate.opsForList().range(redisKey, 0, -1);
+        
+        if (historyJsonList == null || historyJsonList.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+        
+        // 转换为Message对象列表
+        List<Message> messages = new ArrayList<>();
+        for (String json : historyJsonList) {
+            try {
+                Message msg = JSONUtil.toBean(json, Message.class);
+                messages.add(msg);
+            } catch (Exception e) {
+                log.error("解析消息失败: {}", json, e);
+            }
+        }
+        System.out.println(messages);
+        return Result.ok(messages);
+    }
+
+    /**
+     * 清空用户对话上下文
+     */
+    public Result clearChatHistory(String userId) {
+        String redisKey = CHAT_PREFIX + userId;
+        String countKey = COUNT_PREFIX + userId;
+        
+        // 删除对话历史记录
+        redisTemplate.delete(redisKey);
+        // 删除计数记录
+        redisTemplate.delete(countKey);
+        
+        log.info("已清空用户 {} 的对话历史", userId);
+        return Result.ok("对话历史已清空");
     }
 }

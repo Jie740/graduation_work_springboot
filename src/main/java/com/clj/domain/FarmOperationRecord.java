@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import java.math.BigDecimal;
 import java.util.Date;
 import lombok.Data;
 
@@ -54,6 +55,10 @@ public class FarmOperationRecord {
      * 操作时间
      */
     private Date operationTime;
+    /**
+     * 产量（kg）
+     */
+    private BigDecimal outputQuantity;
 
     @Override
     public boolean equals(Object that) {
@@ -74,7 +79,8 @@ public class FarmOperationRecord {
             && (this.getMaterialId() == null ? other.getMaterialId() == null : this.getMaterialId().equals(other.getMaterialId()))
             && (this.getQuantity() == null ? other.getQuantity() == null : this.getQuantity().equals(other.getQuantity()))
             && (this.getUserId() == null ? other.getUserId() == null : this.getUserId().equals(other.getUserId()))
-            && (this.getOperationTime() == null ? other.getOperationTime() == null : this.getOperationTime().equals(other.getOperationTime()));
+            && (this.getOperationTime() == null ? other.getOperationTime() == null : this.getOperationTime().equals(other.getOperationTime()))
+            && (this.getOutputQuantity() == null ? other.getOutputQuantity() == null : this.getOutputQuantity().equals(other.getOutputQuantity()));
     }
 
     @Override
@@ -89,6 +95,7 @@ public class FarmOperationRecord {
         result = prime * result + ((getQuantity() == null) ? 0 : getQuantity().hashCode());
         result = prime * result + ((getUserId() == null) ? 0 : getUserId().hashCode());
         result = prime * result + ((getOperationTime() == null) ? 0 : getOperationTime().hashCode());
+        result = prime * result + ((getOutputQuantity() == null) ? 0 : getOutputQuantity().hashCode());
         return result;
     }
 
@@ -106,6 +113,7 @@ public class FarmOperationRecord {
         sb.append(", quantity=").append(quantity);
         sb.append(", userId=").append(userId);
         sb.append(", operationTime=").append(operationTime);
+        sb.append(", outputQuantity=").append(outputQuantity);
         sb.append("]");
         return sb.toString();
     }
