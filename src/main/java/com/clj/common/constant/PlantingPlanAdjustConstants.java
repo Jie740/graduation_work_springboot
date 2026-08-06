@@ -1,4 +1,4 @@
-package com.clj.constants;
+package com.clj.common.constant;
 
 public class PlantingPlanAdjustConstants {
     // 未审核

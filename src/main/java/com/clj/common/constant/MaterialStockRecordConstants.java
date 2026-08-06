@@ -1,4 +1,4 @@
-package com.clj.constants;
+package com.clj.common.constant;
 
 public class MaterialStockRecordConstants {
     public static final Integer INPUT = 0;

@@ -2,7 +2,7 @@ package com.clj.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.clj.constants.PlantingPlanConstants;
+import com.clj.common.constant.PlantingPlanConstants;
 import com.clj.domain.Crop;
 import com.clj.domain.Land;
 import com.clj.domain.LandAllocation;

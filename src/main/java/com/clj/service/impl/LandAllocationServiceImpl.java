@@ -3,13 +3,11 @@ package com.clj.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.clj.constants.LandConstants;
 import com.clj.domain.*;
 import com.clj.domain.dto.LandAllocationDto;
 import com.clj.domain.vo.ContractorInfoVo;
 import com.clj.domain.vo.ContractorLandVo;
 import com.clj.domain.vo.LandAllocationVo;
-import com.clj.domain.vo.PlantingRecordVo;
 import com.clj.service.LandAllocationService;
 import com.clj.mapper.LandAllocationMapper;
 import com.clj.service.LandService;
@@ -19,14 +17,9 @@ import com.clj.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.clj.constants.LandConstants.ALLOCATED;
-import static com.clj.constants.LandConstants.UN_ALLOCATED;
 
 /**
 * @author ajie

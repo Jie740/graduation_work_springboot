@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clj.mapper.SysRoleMapper">
+
+    <resultMap id="BaseResultMap" type="com.clj.domain.SysRole">
+            <id property="id" column="id" />
+            <result property="roleName" column="role_name" />
+            <result property="roleCode" column="role_code" />
+            <result property="description" column="description" />
+            <result property="status" column="status" />
+            <result property="createTime" column="create_time" />
+            <result property="createUid" column="create_uid" />
+            <result property="updateTime" column="update_time" />
+            <result property="updateUid" column="update_uid" />
+            <result property="deleted" column="deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,role_name,role_code,description,status,create_time,
+        create_uid,update_time,update_uid,deleted,remark
+    </sql>
+</mapper>

@@ -1,6 +1,5 @@
 package com.clj.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clj.domain.ContractorMaterialStock;
@@ -23,7 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static com.clj.constants.MaterialStockRecordConstants.INPUT;
+import static com.clj.common.constant.MaterialStockRecordConstants.INPUT;
 
 /**
 * @author ajie

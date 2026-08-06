@@ -1,7 +1,7 @@
-package com.clj.config;
+package com.clj.common.config;
 
-import com.clj.interceptor.BlacklistInterceptor;
-import com.clj.interceptor.LoginInterceptor;
+import com.clj.common.interceptor.BlacklistInterceptor;
+import com.clj.common.interceptor.LoginInterceptor;
 import com.clj.service.TokenBlackListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -19,8 +19,8 @@ public class MvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("*")
+                .allowedOriginPatterns("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
     }
 

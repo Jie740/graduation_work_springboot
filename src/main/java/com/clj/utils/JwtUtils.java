@@ -10,8 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
-import static com.clj.constants.JwtConstants.EXPIRE_TIME;
-import static com.clj.constants.JwtConstants.TOKEN_SECRET;
+import static com.clj.common.constant.JwtConstants.EXPIRE_TIME;
+import static com.clj.common.constant.JwtConstants.TOKEN_SECRET;
 
 
 @Component

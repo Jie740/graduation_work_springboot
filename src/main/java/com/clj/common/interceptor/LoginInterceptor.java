@@ -1,4 +1,4 @@
-package com.clj.interceptor;
+package com.clj.common.interceptor;
 
 
 
@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static com.clj.constants.JwtConstants.TOKEN_KEY_PREFIX;
-import static com.clj.constants.JwtConstants.TOKEN_TTL;
+import static com.clj.common.constant.JwtConstants.TOKEN_KEY_PREFIX;
+import static com.clj.common.constant.JwtConstants.TOKEN_TTL;
 
 
 @Component

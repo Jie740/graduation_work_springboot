@@ -1,4 +1,4 @@
-package com.clj.constants;
+package com.clj.common.constant;
 
 public class PlantingPlanConstants {
     public static final Integer UN_PUBLISH=0;

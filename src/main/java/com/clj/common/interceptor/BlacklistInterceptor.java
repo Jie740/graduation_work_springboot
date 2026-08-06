@@ -1,4 +1,4 @@
-package com.clj.interceptor;
+package com.clj.common.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,7 +8,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.io.IOException;
 
-import static com.clj.constants.JwtConstants.TOKEN_BLACKLIST_KEY_PREFIX;
+import static com.clj.common.constant.JwtConstants.TOKEN_BLACKLIST_KEY_PREFIX;
 
 
 @Component

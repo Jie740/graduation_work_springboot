@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.clj.constants.MaterialStockRecordConstants.OUTPUT;
+import static com.clj.common.constant.MaterialStockRecordConstants.OUTPUT;
 
 /**
 * @author ajie

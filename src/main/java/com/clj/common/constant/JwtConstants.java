@@ -1,4 +1,4 @@
-package com.clj.constants;
+package com.clj.common.constant;
 
 public class JwtConstants {
     public static final String TOKEN_SECRET = "clj_super_secret_key_123456789031231213";// 密钥至少32位

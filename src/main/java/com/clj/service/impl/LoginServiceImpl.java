@@ -16,7 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.clj.constants.JwtConstants.*;
+import static com.clj.common.constant.JwtConstants.*;
 
 @Slf4j
 @Service

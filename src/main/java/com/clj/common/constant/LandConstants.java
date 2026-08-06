@@ -1,4 +1,4 @@
-package com.clj.constants;
+package com.clj.common.constant;
 
 public class LandConstants {
     public static final Integer UN_ALLOCATED=0;

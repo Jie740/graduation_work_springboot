@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.clj.constants.JwtConstants.TOKEN_BLACKLIST_KEY_PREFIX;
+import static com.clj.common.constant.JwtConstants.TOKEN_BLACKLIST_KEY_PREFIX;
 
 @Slf4j
 @Service
