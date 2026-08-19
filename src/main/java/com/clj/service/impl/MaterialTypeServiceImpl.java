@@ -1,11 +1,13 @@
 package com.clj.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.clj.common.exception.BusinessException;
 import com.clj.domain.MaterialType;
 import com.clj.service.MaterialTypeService;
 import com.clj.mapper.MaterialTypeMapper;
-import com.clj.utils.Result;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
 * @author ajie
@@ -17,26 +19,32 @@ public class MaterialTypeServiceImpl extends ServiceImpl<MaterialTypeMapper, Mat
     implements MaterialTypeService{
 
     @Override
-    public Result add(String materialTypeName) {
+    public void add(String materialTypeName) {
         MaterialType materialType = new MaterialType();
         materialType.setTypeName(materialTypeName);
         System.out.println(materialType);
-        return this.save(materialType)?Result.ok():Result.error("添加失败");
+        if (!this.save(materialType)) {
+            throw new BusinessException("添加失败");
+        }
     }
 
     @Override
-    public Result delete(Long materialTypeId) {
-        return this.removeById(materialTypeId)?Result.ok():Result.error("删除失败");
+    public void delete(Long materialTypeId) {
+        if (!this.removeById(materialTypeId)) {
+            throw new BusinessException("删除失败");
+        }
     }
 
     @Override
-    public Result updateMaterialType(MaterialType materialType) {
-        return this.updateById(materialType)?Result.ok():Result.error("修改失败");
+    public void updateMaterialType(MaterialType materialType) {
+        if (!this.updateById(materialType)) {
+            throw new BusinessException("修改失败");
+        }
     }
 
     @Override
-    public Result getAll() {
-        return Result.ok(this.list());
+    public List<MaterialType> getAll() {
+        return this.list();
     }
 
 }

@@ -1,44 +1,37 @@
 package com.clj.common.config;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
- * Redis 配置（自定义序列化方式，避免乱码）
+ * Redis 配置
+ * 统一 RedisTemplate<String,Object>：
+ * key/hashKey -> String 序列化
+ * value/hashValue -> Jackson JSON 序列化
+ * 避免乱码、JDK 序列化与反序列化异常
  */
 @Configuration
 public class RedisConfig {
 
     @Bean
-    public RedisTemplate<String,Object> redisTemplate(
-            RedisConnectionFactory factory){
+    public RedisTemplate<String, Object> redisTemplate(
+            RedisConnectionFactory factory) {
 
-        RedisTemplate<String,Object> template =
-                new RedisTemplate<>();
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
 
         template.setConnectionFactory(factory);
 
+        StringRedisSerializer stringSerializer = new StringRedisSerializer();
+        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
 
-        GenericJackson2JsonRedisSerializer serializer =
-                new GenericJackson2JsonRedisSerializer();
-
-
-        template.setKeySerializer(
-                new StringRedisSerializer()
-        );
-
-
-        template.setValueSerializer(serializer);
-
+        template.setKeySerializer(stringSerializer);
+        template.setValueSerializer(jsonSerializer);
+        template.setHashKeySerializer(stringSerializer);
+        template.setHashValueSerializer(jsonSerializer);
 
         template.afterPropertiesSet();
 

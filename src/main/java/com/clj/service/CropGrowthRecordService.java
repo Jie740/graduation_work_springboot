@@ -2,7 +2,7 @@ package com.clj.service;
 
 import com.clj.domain.CropGrowthRecord;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clj.utils.Result;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 /**
 * @author ajie
@@ -10,9 +10,9 @@ import com.clj.utils.Result;
 * @createDate 2026-03-02 20:08:39
 */
 public interface CropGrowthRecordService extends IService<CropGrowthRecord> {
-    Result add(CropGrowthRecord cropGrowthRecord);
-    Result delete(Integer cropGrowthRecordId);
-    Result updateCropGrowthRecord(CropGrowthRecord cropGrowthRecord);
-    Result getCropGrowthRecordsByPage(Integer pageNum, Integer pageSize);
-    Result searchCropGrowthRecordsByPage(String keyword, Integer pageNum, Integer pageSize);
+    void add(CropGrowthRecord cropGrowthRecord);
+    void delete(Integer cropGrowthRecordId);
+    void updateCropGrowthRecord(CropGrowthRecord cropGrowthRecord);
+    Page<CropGrowthRecord> getCropGrowthRecordsByPage(Integer pageNum, Integer pageSize);
+    Page<CropGrowthRecord> searchCropGrowthRecordsByPage(String keyword, Integer pageNum, Integer pageSize);
 }

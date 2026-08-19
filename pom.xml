@@ -127,6 +127,92 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+<!--        lanchain4j-->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
+            <version>1.3.0-beta9</version>
+        </dependency>
+
+<!--        LangChain4j 提供了一个 Spring Boot Starter，-->
+<!--        用于自动配置 AI Services、RAG、Tools 等。-->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-spring-boot-starter</artifactId>
+            <version>1.3.0-beta9</version>
+        </dependency>
+
+<!--        miniIO-->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.17</version>
+        </dependency>
+
+        <!-- ===================================================== -->
+        <!-- PostgreSQL + pgvector -->
+        <!-- ===================================================== -->
+
+        <!-- PostgreSQL JDBC -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+
+        <!-- PostgreSQL pgvector Java支持 -->
+        <dependency>
+            <groupId>com.pgvector</groupId>
+            <artifactId>pgvector</artifactId>
+            <version>0.1.6</version>
+        </dependency>
+
+
+        <!-- ===================================================== -->
+        <!-- LangChain4j Document Parser -->
+        <!-- ===================================================== -->
+
+        <!-- PDF解析 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-document-parser-apache-pdfbox</artifactId>
+            <version>1.3.0-beta9</version>
+        </dependency>
+
+        <!-- LangChain4j PgVector EmbeddingStore -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-pgvector</artifactId>
+            <version>1.3.0-beta9</version>
+        </dependency>
+
+        <!-- LangChain4j Apache Tika Document Parser -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-document-parser-apache-tika</artifactId>
+            <version>1.3.0-beta9</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.tika</groupId>
+                    <artifactId>tika-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tika</groupId>
+                    <artifactId>tika-parser-pdf-module</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- 显式锁定 Tika 版本为 2.9.3，避免 3.0.0 的 streamCache 兼容性问题 -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>2.9.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parser-pdf-module</artifactId>
+            <version>2.9.3</version>
+        </dependency>
     </dependencies>
 
 

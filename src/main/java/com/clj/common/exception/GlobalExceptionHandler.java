@@ -1,10 +1,11 @@
 package com.clj.common.exception;
 
-import com.exam.common.result.Result;
-import com.exam.common.result.ResultCode;
+import com.clj.common.result.Result;
+import com.clj.common.result.ResultCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -36,11 +39,28 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleValidException(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult().getFieldErrors().stream()
+        List<String> errors = new ArrayList<>();
+        // 字段级别错误
+        e.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(", "));
+                .forEach(errors::add);
+        // 类级别错误（如 @PhoneOrEmail 等跨字段校验）
+        e.getBindingResult().getGlobalErrors().stream()
+                .map(org.springframework.validation.ObjectError::getDefaultMessage)
+                .forEach(errors::add);
+        String message = String.join(", ", errors);
         log.error("参数校验异常: {}", message);
         return Result.fail(ResultCode.PARAM_ERROR.getCode(), message);
+    }
+
+    /**
+     * 处理权限不足异常
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Result<Void> handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
+        log.warn("权限不足 [{}]: {}", request.getRequestURI(), e.getMessage());
+        return Result.fail(ResultCode.FORBIDDEN);
     }
 
     /**

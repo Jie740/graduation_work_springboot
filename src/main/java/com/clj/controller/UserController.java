@@ -1,82 +1,108 @@
 package com.clj.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.clj.common.result.Result;
 import com.clj.domain.User;
+import com.clj.domain.vo.UserVo;
 import com.clj.service.UserService;
-import com.clj.utils.Result;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
+/**
+ * 用户管理（员工管理）：SYSTEM_ADMIN、ENTERPRISE_ADMIN
+ * 个人中心接口：所有已登录用户
+ */
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
 
-//    添加用户
+    //    添加用户
     @PostMapping("/addUser")
-    public Result addUser(@RequestBody User user) {
-        return userService.addUser(user);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> addUser(@RequestBody User user) {
+        userService.addUser(user);
+        return Result.success();
     }
 
-//    删除用户
+    //    删除用户
     @DeleteMapping("/deleteUser/{id}")
-    public Result deleteUser(@PathVariable("id") Integer id) {
-        return userService.deleteUser(id);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> deleteUser(@PathVariable("id") Integer id) {
+        userService.deleteUser(id);
+        return Result.success();
     }
-//    修改用户
+
+    //    修改用户
     @PostMapping("/updateUser")
-    public Result updateUser(@RequestBody User user) {
-        return userService.updateUser(user);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> updateUser(@RequestBody User user) {
+        userService.updateUser(user);
+        return Result.success();
     }
 
     //    分页获取用户列表
     @GetMapping("/getUsersByPage/{pageNum}/{pageSize}")
-    public Result getUsersByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
-        return userService.getUsersByPage(pageNum, pageSize);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<User>> getUsersByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
+        return Result.success(userService.getUsersByPage(pageNum, pageSize));
     }
 
     @GetMapping("/searchUsersByPage/{keyword}/{pageNum}/{pageSize}")
-    public Result searchUsersByPage(@PathVariable("keyword") String keyword, @PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
-        return userService.searchUsersByPage(keyword,pageNum, pageSize);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<User>> searchUsersByPage(@PathVariable("keyword") String keyword, @PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
+        return Result.success(userService.searchUsersByPage(keyword, pageNum, pageSize));
     }
 
     @PutMapping("/updateUserStatus/{userId}/{status}")
-    public Result updateUserStatus(@PathVariable("userId") Integer id,@PathVariable("status") Integer status) {
-        return userService.updateUserStatus(id, status);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> updateUserStatus(@PathVariable("userId") Integer id, @PathVariable("status") Integer status) {
+        userService.updateUserStatus(id, status);
+        return Result.success();
     }
 
     //通过姓名和电话获取用户(承包人)
-
     @GetMapping("/searchUserByNameAndPhone/{name}/{phone}")
-    public Result searchUserByNameAndPhone(@PathVariable("name") String name,@PathVariable("phone") String phone) {
-        return userService.searchUserByNameAndPhone(name, phone);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Map<String, String>> searchUserByNameAndPhone(@PathVariable("name") String name, @PathVariable("phone") String phone) {
+        return Result.success(userService.searchUserByNameAndPhone(name, phone));
     }
 
     @GetMapping("getContractorsByPage/{pageNum}/{pageSize}")
-    public Result getContractorsByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
-        return userService.getContractorsByPage(pageNum, pageSize);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<User>> getContractorsByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
+        return Result.success(userService.getContractorsByPage(pageNum, pageSize));
     }
 
     @GetMapping("searchContractorsByPage/{keyword}/{pageNum}/{pageSize}")
-    public Result searchContractorsByPage(@PathVariable("keyword") String keyword, @PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
-        return userService.searchContractorsByPage(keyword,pageNum, pageSize);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<User>> searchContractorsByPage(@PathVariable("keyword") String keyword, @PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
+        return Result.success(userService.searchContractorsByPage(keyword, pageNum, pageSize));
     }
 
+    // 个人中心：所有已登录用户可访问
     @GetMapping("/getUserInfo")
-    public Result getUserInfo() {
-        return userService.getUserInfo();
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
+    public Result<UserVo> getUserInfo() {
+        return Result.success(userService.getUserInfo());
     }
 
     @GetMapping("/getName")
-    public Result getName() {
-        return userService.getName();
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
+    public Result<Map<String, String>> getName() {
+        return Result.success(userService.getName());
     }
 
     @PutMapping("/updatePassword")
-    public Result updatePassword(@RequestBody java.util.HashMap<String, String> params) {
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
+    public Result<Void> updatePassword(@RequestBody java.util.HashMap<String, String> params) {
         String oldPassword = params.get("oldPassword");
         String newPassword = params.get("newPassword");
-        return userService.updatePassword(oldPassword, newPassword);
+        userService.updatePassword(oldPassword, newPassword);
+        return Result.success();
     }
-
 }

@@ -1,9 +1,12 @@
 package com.clj.service;
 
 import com.clj.domain.PlantingRecord;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.clj.domain.dto.PlantingRecordDto;
-import com.clj.utils.Result;
+import com.clj.domain.vo.PlantingRecordVo;
+
+import java.util.Map;
 
 /**
 * @author ajie
@@ -13,18 +16,18 @@ import com.clj.utils.Result;
 public interface PlantingRecordService extends IService<PlantingRecord> {
 
 
-    Result add(PlantingRecordDto plantingRecordDto);
+    void add(PlantingRecordDto plantingRecordDto);
 
-    Result updatePlantingRecord(PlantingRecordDto plantingRecordDto);
+    void updatePlantingRecord(PlantingRecordDto plantingRecordDto);
 
 
-    Result getPlantingRecordsByPage(Integer pageNum, Integer pageSize);
+    Page<PlantingRecordVo> getPlantingRecordsByPage(Integer pageNum, Integer pageSize);
 
-    Result delete(Long recordId);
+    void delete(Long recordId);
 
-    Result getAllAndCrops();
+    Map<String, Object> getAllAndCrops();
 
-    Result getGrowthPlantingRecordsByPage(Integer pageNum, Integer pageSize);
+    Page<PlantingRecordVo> getGrowthPlantingRecordsByPage(Integer pageNum, Integer pageSize);
 
-    Result getMyPlantingRecords(Integer pageNum, Integer pageSize);
+    Page<PlantingRecordVo> getMyPlantingRecords(Integer pageNum, Integer pageSize);
 }

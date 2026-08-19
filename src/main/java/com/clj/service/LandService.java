@@ -1,8 +1,10 @@
 package com.clj.service;
 
 import com.clj.domain.Land;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clj.utils.Result;
+
+import java.util.List;
 
 /**
 * @author ajie
@@ -11,18 +13,18 @@ import com.clj.utils.Result;
 */
 public interface LandService extends IService<Land> {
 
-    Result addLand(Land land);
+    void addLand(Land land);
 
-    Result deleteLand(Long landId);
+    void deleteLand(Long landId);
 
-    Result updateLand(Land land);
+    void updateLand(Land land);
 
-    Result getLandsByPage(Integer pageNum, Integer pageSize);
+    Page<Land> getLandsByPage(Integer pageNum, Integer pageSize);
 
-    Result searchLandsByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<Land> searchLandsByPage(String keyword, Integer pageNum, Integer pageSize);
 
 //    Boolean updateLandStatus(Long landId, Integer status);
 
-    Result getAll();
+    List<Land> getAll();
 
 }

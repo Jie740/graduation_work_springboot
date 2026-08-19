@@ -2,6 +2,7 @@ package com.clj.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.clj.common.exception.BusinessException;
 import com.clj.domain.Material;
 import com.clj.domain.MaterialStockRecord;
 import com.clj.domain.MaterialType;
@@ -10,7 +11,6 @@ import com.clj.mapper.MaterialMapper;
 import com.clj.mapper.MaterialTypeMapper;
 import com.clj.service.MaterialStockRecordService;
 import com.clj.mapper.MaterialStockRecordMapper;
-import com.clj.utils.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,24 +33,30 @@ public class MaterialStockRecordServiceImpl extends ServiceImpl<MaterialStockRec
     private final MaterialTypeMapper materialTypeMapper;
 
     @Override
-    public Result add(MaterialStockRecord materialStockRecord) {
-        return this.save(materialStockRecord) ? Result.ok() : Result.error("添加失败");
+    public void add(MaterialStockRecord materialStockRecord) {
+        if (!this.save(materialStockRecord)) {
+            throw new BusinessException("添加失败");
+        }
     }
 
     @Override
-    public Result delete(Long stockRecordId) {
-        return this.removeById(stockRecordId) ? Result.ok() : Result.error("删除失败");
+    public void delete(Long stockRecordId) {
+        if (!this.removeById(stockRecordId)) {
+            throw new BusinessException("删除失败");
+        }
     }
 
     @Override
-    public Result update(MaterialStockRecord materialStockRecord) {
-        return this.updateById(materialStockRecord) ? Result.ok() : Result.error("更新失败");
+    public void update(MaterialStockRecord materialStockRecord) {
+        if (!this.updateById(materialStockRecord)) {
+            throw new BusinessException("更新失败");
+        }
     }
 
     @Override
-    public Result getByPage(String keyword, Integer pageNum, Integer pageSize) {
+    public Page<MaterialStockRecordVo> getByPage(String keyword, Integer pageNum, Integer pageSize) {
         Page<MaterialStockRecord> page;
-        
+
         if (keyword == null || keyword.trim().isEmpty()) {
             page = this.page(new Page<>(pageNum, pageSize));
         } else {
@@ -58,17 +64,17 @@ public class MaterialStockRecordServiceImpl extends ServiceImpl<MaterialStockRec
                     new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Material>()
                             .like(Material::getMaterialName, keyword)
             );
-            
+
             if (materials.isEmpty()) {
                 Page<MaterialStockRecordVo> emptyPage = new Page<>(pageNum, pageSize, 0);
                 emptyPage.setRecords(new ArrayList<>());
-                return Result.ok(emptyPage);
+                return emptyPage;
             }
-            
+
             List<Long> materialIds = materials.stream()
                     .map(Material::getMaterialId)
                     .collect(Collectors.toList());
-            
+
             page = this.lambdaQuery()
                     .in(MaterialStockRecord::getMaterialId, materialIds)
                     .page(new Page<>(pageNum, pageSize));
@@ -120,7 +126,7 @@ public class MaterialStockRecordServiceImpl extends ServiceImpl<MaterialStockRec
 
         Page<MaterialStockRecordVo> voPage = new Page<>(pageNum, pageSize, page.getTotal());
         voPage.setRecords(voList);
-        return Result.ok(voPage);
+        return voPage;
     }
 }
 

@@ -1,10 +1,11 @@
 package com.clj.service;
 
-import com.clj.domain.Equipment;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clj.utils.Result;
+import com.clj.domain.Equipment;
+import com.clj.domain.vo.EquipmentVo;
 
-import java.util.List;
+import java.util.Map;
 
 /**
 * @author ajie
@@ -13,15 +14,15 @@ import java.util.List;
 */
 public interface EquipmentService extends IService<Equipment> {
 
-    Result add(Equipment equipment);
-    Result delete(Long equipmentId);
+    void add(Equipment equipment);
+    void delete(Long equipmentId);
 
-    Result updateEquipment(Equipment equipment);
+    void updateEquipment(Equipment equipment);
 
-    Result getEquipmentByPage(Integer pageNum, Integer pageSize);
+    Page<EquipmentVo> getEquipmentByPage(Integer pageNum, Integer pageSize);
 
-    Result searchEquipmentByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<EquipmentVo> searchEquipmentByPage(String keyword, Integer pageNum, Integer pageSize);
 
-    Result getEquipmentTypeNameById(Long equipmentId);
+    Map<String, String> getEquipmentTypeNameById(Long equipmentId);
 
 }

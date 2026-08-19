@@ -1,8 +1,11 @@
 package com.clj.security.filter;
 
+import com.clj.common.constant.JwtConstants;
+import com.clj.common.constant.RedisConstant;
 import com.clj.common.constant.SystemConstant;
 import com.clj.security.LoginUser;
 import com.clj.security.util.JwtUtil;
+import com.clj.service.SysUserRoleService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -13,7 +16,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +24,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * JWT 认证过滤器
@@ -38,15 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    /**
-     * Redis JWT 黑名单前缀
-     */
-    private static final String JWT_BLACKLIST_PREFIX = "jwt:blacklist:";
-
-    /**
-     * Redis 用户权限缓存前缀
-     */
-    private static final String USER_PERMISSION_PREFIX = "user:permission:";
+    private final SysUserRoleService sysUserRoleService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -70,7 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jti = claims.getId();
 
             // 2. 检查 Token 是否在黑名单中
-            String blacklistKey = JWT_BLACKLIST_PREFIX + jti;
+            String blacklistKey = JwtConstants.TOKEN_BLACKLIST_PREFIX + jti;
             Boolean isBlacklisted = redisTemplate.hasKey(blacklistKey);
             if (Boolean.TRUE.equals(isBlacklisted)) {
                 log.warn("Token 已被加入黑名单: {}", jti);
@@ -79,11 +74,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // 3. 尝试从 Redis 获取用户权限缓存
-            String permissionKey = USER_PERMISSION_PREFIX + userId;
+            String permissionKey = RedisConstant.USER_PERMISSION_PREFIX + userId;
             @SuppressWarnings("unchecked")
             List<String> permissions = (List<String>) redisTemplate.opsForValue().get(permissionKey);
 
-            // 4. 构建 LoginUser 并设置 SecurityContext
+            // 4. 缓存未命中时兜底查库（Redis 被清空/重启场景），并写回缓存
+            // 权限来源于 RBAC 模型：sys_user_role -> sys_role -> sys_role_permission -> sys_permission
+            if (permissions == null || permissions.isEmpty()) {
+                permissions = sysUserRoleService.getPermissionCodesByUserId(userId);
+                if (permissions != null && !permissions.isEmpty()) {
+                    redisTemplate.opsForValue().set(
+                            permissionKey, permissions,
+                            RedisConstant.TOKEN_EXPIRE_SECONDS, TimeUnit.SECONDS);
+                }
+            }
+
+            // 5. 构建 LoginUser 并设置 SecurityContext
             LoginUser loginUser = new LoginUser();
             loginUser.setUserId(userId);
             loginUser.setUsername(username);
@@ -113,8 +119,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // 对登录接口不执行 JWT 过滤器
+        // 对登录、登出接口不执行 JWT 过滤器
         String path = request.getServletPath();
-        return "/api/auth/login".equals(path) || "/api/auth/register".equals(path);
+        return "/login".equals(path) || "/logout".equals(path);
     }
 }

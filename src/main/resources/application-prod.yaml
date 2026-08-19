@@ -1,0 +1,26 @@
+# ==================== 生产环境配置 ====================
+spring:
+  datasource:
+    mysql:
+      username: root
+      password: ${DB_PASSWORD:}   # 生产环境密码请通过环境变量 DB_PASSWORD 传入，不要硬编码
+      url: jdbc:mysql://${DB_HOST:localhost}:3306/smart_agriculture?useUnicode=true&characterEncoding=UTF-8&useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    postgres:
+      jdbc-url: jdbc:postgresql://${PG_HOST:localhost}:5432/${PG_DATABASE:agriculture_ai}
+      username: ${PG_USERNAME:postgres}
+      password: ${PG_PASSWORD:}   # 生产环境密码请通过环境变量 PG_PASSWORD 传入，不要硬编码
+      driver-class-name: org.postgresql.Driver
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+      database: 0
+
+logging:
+  level:
+    com.clj.mapper: warn
+    root: info

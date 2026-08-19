@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clj.ai.mapper.AiRagDocumentMapper">
+
+    <resultMap id="BaseResultMap" type="com.clj.ai.domain.AiRagDocument">
+            <id property="id" column="id" />
+            <result property="knowledgeBaseId" column="knowledge_base_id" />
+            <result property="name" column="name" />
+            <result property="fileName" column="file_name" />
+            <result property="fileType" column="file_type" />
+            <result property="fileSize" column="file_size" />
+            <result property="objectName" column="object_name" />
+            <result property="fileUrl" column="file_url" />
+            <result property="content" column="content" />
+            <result property="status" column="status" />
+            <result property="processStatus" column="process_status" />
+            <result property="processMessage" column="process_message" />
+            <result property="chunkCount" column="chunk_count" />
+            <result property="version" column="version" />
+            <result property="fileHash" column="file_hash" />
+            <result property="crtim" column="crtim" />
+            <result property="cruid" column="cruid" />
+            <result property="uptim" column="uptim" />
+            <result property="upuid" column="upuid" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="deletedAt" column="deleted_at" />
+            <result property="deletedBy" column="deleted_by" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,knowledge_base_id,name,file_name,file_type,file_size,
+        object_name,file_url,content,status,process_status,
+        process_message,chunk_count,version,file_hash,crtim,
+        cruid,uptim,upuid,is_deleted,deleted_at,
+        deleted_by
+    </sql>
+</mapper>

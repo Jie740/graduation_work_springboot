@@ -1,11 +1,13 @@
 package com.clj.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.clj.common.result.Result;
 import com.clj.domain.MaterialApply;
 import com.clj.domain.dto.MaterialApplyDto;
 import com.clj.domain.vo.MaterialApplyVo;
 import com.clj.service.MaterialApplyService;
-import com.clj.utils.Result;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,48 +16,60 @@ import org.springframework.web.bind.annotation.*;
 public class MaterialApplyController {
     final MaterialApplyService materialApplyService;
     @PostMapping("/add")
-    public Result add(@RequestBody MaterialApplyDto materialApplyDto){
-        return materialApplyService.add(materialApplyDto);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> add(@RequestBody MaterialApplyDto materialApplyDto){
+        materialApplyService.add(materialApplyDto);
+        return Result.success();
     }
     @GetMapping("/getMaterialApplyByPage/{pageNum}/{pageSize}")
-    public Result getMaterialApplyByPage(@PathVariable("pageNum") Integer pageNum,
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<MaterialApplyVo>> getMaterialApplyByPage(@PathVariable("pageNum") Integer pageNum,
                                          @PathVariable("pageSize") Integer pageSize){
-        return materialApplyService.getMaterialApplyByPage(pageNum, pageSize);
+        return Result.success(materialApplyService.getMaterialApplyByPage(pageNum, pageSize));
     }
 
     @GetMapping("/searchMaterialApplyByPage/{keyword}/{pageNum}/{pageSize}")
-    public Result searchMaterialApplyByPage(@PathVariable("keyword") String keyword
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<MaterialApplyVo>> searchMaterialApplyByPage(@PathVariable("keyword") String keyword
             , @PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize){
-        return materialApplyService.searchMaterialApplyByPage(keyword, pageNum, pageSize);
+        return Result.success(materialApplyService.searchMaterialApplyByPage(keyword, pageNum, pageSize));
     }
 
     @DeleteMapping("/delete/{applyId}")
-    public Result delete(@PathVariable("applyId") Long applyId){
-        return materialApplyService.delete(applyId);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> delete(@PathVariable("applyId") Long applyId){
+        materialApplyService.delete(applyId);
+        return Result.success();
     }
 
     @PutMapping("/update/{applyId}/{status}")
-    public Result update(@PathVariable("applyId") Long applyId,
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> update(@PathVariable("applyId") Long applyId,
                          @PathVariable("status") Integer status){
-        return materialApplyService.updateMaterialApplyStatus(applyId, status);
+        materialApplyService.updateMaterialApplyStatus(applyId, status);
+        return Result.success();
     }
     @GetMapping("/getMaterialApplyById/{applyId}")
-    public MaterialApplyVo getById(@PathVariable("applyId") Long applyId){
-        return materialApplyService.getMaterialApplyVoById(applyId);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<MaterialApplyVo> getById(@PathVariable("applyId") Long applyId){
+        return Result.success(materialApplyService.getMaterialApplyVoById(applyId));
     }
 
     @PutMapping("/update")
-    public Result updateApply(@RequestBody MaterialApplyDto materialApplyDto){
-        return materialApplyService.updateApply(materialApplyDto);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> updateApply(@RequestBody MaterialApplyDto materialApplyDto){
+        materialApplyService.updateApply(materialApplyDto);
+        return Result.success();
     }
 
     // 根据用户ID分页查询我的农资申请
     @GetMapping("/getMyApplies/{pageNum}/{pageSize}")
-    public Result getMyApplies(
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<MaterialApplyVo>> getMyApplies(
             @RequestParam(value = "keyword", required = false) String keyword,
             @PathVariable("pageNum") Integer pageNum,
             @PathVariable("pageSize") Integer pageSize
     ) {
-        return materialApplyService.getMyApplies(keyword, pageNum, pageSize);
+        return Result.success(materialApplyService.getMyApplies(keyword, pageNum, pageSize));
     }
 }

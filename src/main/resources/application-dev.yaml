@@ -1,0 +1,50 @@
+# ==================== 开发环境配置 ====================
+spring:
+  datasource:
+    mysql:
+      username: root
+      password: 123
+      url: jdbc:mysql://192.168.127.128:3306/smart_agriculture?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    postgres:
+      jdbc-url: jdbc:postgresql://192.168.127.128:5432/agriculture_ai
+      username: postgres
+      password: 123456
+      driver-class-name: org.postgresql.Driver
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: 192.168.127.128
+      port: 6379
+      database: 1
+
+minio:
+  endpoint: http://192.168.127.128:9000
+  accessKey: admin
+  secretKey: 12345678
+  bucketName: agriculture
+
+# AI RAG 配置
+ai:
+  embedding:
+    api-key: ${AL_API_KEY}
+    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    model-name: text-embedding-v3
+    dimensions: 1024
+  pgvector:
+    host: 192.168.127.128
+    port: 5432
+    database: agriculture_ai
+    user: postgres
+    password: 123456
+    table: ai_rag_embedding
+    dimension: 1024
+    use-index: false
+    index-list-size: 100
+    drop-existing: false
+
+logging:
+  level:
+    com.clj.mapper: debug

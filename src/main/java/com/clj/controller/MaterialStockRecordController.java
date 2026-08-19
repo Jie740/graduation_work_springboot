@@ -1,9 +1,12 @@
 package com.clj.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.clj.common.result.Result;
 import com.clj.domain.MaterialStockRecord;
+import com.clj.domain.vo.MaterialStockRecordVo;
 import com.clj.service.MaterialStockRecordService;
-import com.clj.utils.Result;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,25 +17,32 @@ public class MaterialStockRecordController {
     private final MaterialStockRecordService materialStockRecordService;
 
     @PostMapping("/add")
-    public Result add(@RequestBody MaterialStockRecord materialStockRecord) {
-        return materialStockRecordService.add(materialStockRecord);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> add(@RequestBody MaterialStockRecord materialStockRecord) {
+        materialStockRecordService.add(materialStockRecord);
+        return Result.success();
     }
 
     @DeleteMapping("/delete/{stockRecordId}")
-    public Result delete(@PathVariable("stockRecordId") Long stockRecordId) {
-        return materialStockRecordService.delete(stockRecordId);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> delete(@PathVariable("stockRecordId") Long stockRecordId) {
+        materialStockRecordService.delete(stockRecordId);
+        return Result.success();
     }
 
     @PutMapping("/update")
-    public Result update(@RequestBody MaterialStockRecord materialStockRecord) {
-        return materialStockRecordService.update(materialStockRecord);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> update(@RequestBody MaterialStockRecord materialStockRecord) {
+        materialStockRecordService.update(materialStockRecord);
+        return Result.success();
     }
 
     @GetMapping("/getByPage/{pageNum}/{pageSize}")
-    public Result getByPage(
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<MaterialStockRecordVo>> getByPage(
             @RequestParam(value = "keyword", required = false) String keyword,
             @PathVariable("pageNum") Integer pageNum,
             @PathVariable("pageSize") Integer pageSize) {
-        return materialStockRecordService.getByPage(keyword, pageNum, pageSize);
+        return Result.success(materialStockRecordService.getByPage(keyword, pageNum, pageSize));
     }
 }

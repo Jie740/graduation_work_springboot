@@ -1,8 +1,12 @@
 package com.clj.service;
 
 import com.clj.domain.Material;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.clj.domain.vo.MaterialVo;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clj.utils.Result;
+
+import java.util.List;
+import java.util.Map;
 
 /**
 * @author ajie
@@ -12,17 +16,17 @@ import com.clj.utils.Result;
 public interface MaterialService extends IService<Material> {
 
 
-    Result add(Material material);
+    String add(Material material);
 
-    Result delete(Long materialId);
+    void delete(Long materialId);
 
-    Result updateMaterial(Material material);
+    void updateMaterial(Material material);
 
-    Result searchMaterialsByPage(Long typeId,String keyword,Integer pageNum, Integer pageSize);
+    Page<MaterialVo> searchMaterialsByPage(Long typeId,String keyword,Integer pageNum, Integer pageSize);
 
-    Result getMaterialsByPage(Integer pageNum, Integer pageSize);
+    Page<MaterialVo> getMaterialsByPage(Integer pageNum, Integer pageSize);
 
-    Result getAll();
+    List<Material> getAll();
 
-    Result getMaterialTypeById(Long materialId);
+    Map<String, String> getMaterialTypeById(Long materialId);
 }

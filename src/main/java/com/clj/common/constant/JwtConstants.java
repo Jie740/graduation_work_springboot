@@ -1,14 +1,12 @@
 package com.clj.common.constant;
 
+/**
+ * JWT 相关常量（Spring Security + jti 黑名单体系）
+ */
 public class JwtConstants {
-    public static final String TOKEN_SECRET = "clj_super_secret_key_123456789031231213";// 密钥至少32位
-    public static final long EXPIRE_TIME = 2 * 60 * 60 * 1000;  //2小时过期时间
-//    public static final long EXPIRE_TIME = 16*60 * 1000;  //16分钟过期时间
 
-    public static final String TOKEN_KEY_PREFIX ="login:token:";
-
-    public static final String TOKEN_BLACKLIST_KEY_PREFIX ="token:blackList:";
-
-    public static final Long TOKEN_TTL=2L; //2小时过期时间
-//    public static final Long TOKEN_TTL=16L;  //16分钟过期时间
+    /**
+     * Redis Token 黑名单前缀（key = jti）
+     */
+    public static final String TOKEN_BLACKLIST_PREFIX = "jwt:blacklist:";
 }

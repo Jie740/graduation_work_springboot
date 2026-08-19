@@ -1,9 +1,13 @@
 package com.clj.service;
 
-import com.clj.domain.EquipmentRecord;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.domain.Equipment;
+import com.clj.domain.EquipmentRecord;
 import com.clj.domain.dto.EquipmentRecordDto;
-import com.clj.utils.Result;
+import com.clj.domain.vo.EquipmentRecordVo;
+
+import java.util.List;
 
 /**
 * @author ajie
@@ -12,17 +16,17 @@ import com.clj.utils.Result;
 */
 public interface EquipmentRecordService extends IService<EquipmentRecord> {
 
-    Result add(EquipmentRecord equipmentRecord);
+    void add(EquipmentRecord equipmentRecord);
 
-    Result delete(Long equipmentRecordId);
+    void delete(Long equipmentRecordId);
 
-    Result getByPage(Integer pageNum, Integer pageSize);
+    Page<EquipmentRecordVo> getByPage(Integer pageNum, Integer pageSize);
 
-    Result searchByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<EquipmentRecordVo> searchByPage(String keyword, Integer pageNum, Integer pageSize);
 
-    Result updateStatus(EquipmentRecordDto equipmentRecordDto);
+    void updateStatus(EquipmentRecordDto equipmentRecordDto);
 
-    Result getByUserId(String keyword, Integer pageNum, Integer pageSize);
+    Page<EquipmentRecordVo> getByUserId(String keyword, Integer pageNum, Integer pageSize);
 
-    Result getMyEquipment();
+    List<Equipment> getMyEquipment();
 }

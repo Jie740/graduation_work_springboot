@@ -1,10 +1,10 @@
 package com.clj.service;
 
 import com.clj.domain.MaterialApply;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.clj.domain.dto.MaterialApplyDto;
 import com.clj.domain.vo.MaterialApplyVo;
-import com.clj.utils.Result;
 
 /**
 * @author ajie
@@ -13,19 +13,19 @@ import com.clj.utils.Result;
 */
 public interface MaterialApplyService extends IService<MaterialApply> {
 
-    Result getMaterialApplyByPage(Integer pageNum, Integer pageSize);
+    Page<MaterialApplyVo> getMaterialApplyByPage(Integer pageNum, Integer pageSize);
 
-    Result add(MaterialApplyDto materialApplyDto);
+    void add(MaterialApplyDto materialApplyDto);
 
-    Result searchMaterialApplyByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<MaterialApplyVo> searchMaterialApplyByPage(String keyword, Integer pageNum, Integer pageSize);
 
-    Result delete(Long applyId);
+    void delete(Long applyId);
 
-    Result updateMaterialApplyStatus(Long applyId, Integer status);
+    void updateMaterialApplyStatus(Long applyId, Integer status);
 
     MaterialApplyVo getMaterialApplyVoById(Long applyId);
 
-    Result updateApply(MaterialApplyDto materialApplyDto);
+    void updateApply(MaterialApplyDto materialApplyDto);
 
-    Result getMyApplies(String keyword, Integer pageNum, Integer pageSize);
+    Page<MaterialApplyVo> getMyApplies(String keyword, Integer pageNum, Integer pageSize);
 }

@@ -6,10 +6,9 @@ import com.alibaba.dashscope.common.Message;
 import com.alibaba.dashscope.exception.ApiException;
 import com.alibaba.dashscope.exception.InputRequiredException;
 import com.alibaba.dashscope.exception.NoApiKeyException;
-import com.clj.utils.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -36,7 +35,7 @@ public class DashScopeStreamService {
     private final Generation gen = new Generation();
 
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     // ✅ 上下文缓存（生产环境使用 Redis）
     private static final Map<String, List<Message>> CONTEXT_MAP = new ConcurrentHashMap<>();
@@ -95,7 +94,7 @@ public class DashScopeStreamService {
                 messages.addAll(history);
 
                 messages.add(Message.builder()
-                        .role("user")
+                        .role("USER")
                         .content(finalPrompt)
                         .build());
 
@@ -147,7 +146,7 @@ public class DashScopeStreamService {
 
                                 // ===== 5. 保存上下文到 Redis =====
                                 history.add(Message.builder()
-                                        .role("user")
+                                        .role("USER")
                                         .content(question)
                                         .build());
 

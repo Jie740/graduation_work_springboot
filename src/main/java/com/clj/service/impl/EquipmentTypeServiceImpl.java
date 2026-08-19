@@ -1,11 +1,13 @@
 package com.clj.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.clj.common.exception.BusinessException;
 import com.clj.domain.EquipmentType;
-import com.clj.service.EquipmentTypeService;
 import com.clj.mapper.EquipmentTypeMapper;
-import com.clj.utils.Result;
+import com.clj.service.EquipmentTypeService;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
 * @author ajie
@@ -18,26 +20,32 @@ public class EquipmentTypeServiceImpl extends ServiceImpl<EquipmentTypeMapper, E
 
 
     @Override
-    public Result add(String equipmentTypeName) {
+    public void add(String equipmentTypeName) {
         EquipmentType equipmentType = new EquipmentType();
         equipmentType.setEquipmentTypeName(equipmentTypeName);
-        return this.save(equipmentType)?Result.ok():Result.error("添加失败");
+        if (!this.save(equipmentType)) {
+            throw new BusinessException("添加失败");
+        }
     }
 
     @Override
-    public Result delete(Long equipmentTypeId) {
-        return this.removeById(equipmentTypeId)?Result.ok():Result.error("删除失败");
+    public void delete(Long equipmentTypeId) {
+        if (!this.removeById(equipmentTypeId)) {
+            throw new BusinessException("删除失败");
+        }
     }
 
     @Override
-    public Result updateEquipmentType(EquipmentType equipmentType) {
+    public void updateEquipmentType(EquipmentType equipmentType) {
         System.out.println(equipmentType);
-        return this.updateById(equipmentType)?Result.ok():Result.error("修改失败");
+        if (!this.updateById(equipmentType)) {
+            throw new BusinessException("修改失败");
+        }
     }
 
     @Override
-    public Result getEquipmentTypes() {
-        return Result.ok(this.list());
+    public List<EquipmentType> getEquipmentTypes() {
+        return this.list();
     }
 }
 

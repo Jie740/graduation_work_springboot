@@ -51,15 +51,15 @@ public class JwtUtil {
 
         return Jwts.builder()
                 // 签发者
-                .issuer("exam-system")
+                .setIssuer("exam-system")
                 // 面向用户
-                .subject(loginUser.getUsername())
+                .setSubject(loginUser.getUsername())
                 // 签发时间
-                .issuedAt(now)
+                .setIssuedAt(now)
                 // 过期时间
-                .expiration(expiration)
+                .setExpiration(expiration)
                 // JWT唯一ID（用于Redis黑名单）
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .setId(UUID.randomUUID().toString().replace("-", ""))
                 // 自定义字段：用户ID
                 .claim("userId", loginUser.getUserId())
                 // 自定义字段：用户名
@@ -76,10 +76,9 @@ public class JwtUtil {
      */
     public Claims parse(String token) {
         return Jwts.parser()
-                .verifyWith(getSecretKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                .setSigningKey(getSecretKey())
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     /**

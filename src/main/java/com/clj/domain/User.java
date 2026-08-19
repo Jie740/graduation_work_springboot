@@ -35,7 +35,7 @@ public class User {
     private String name;
 
     /**
-     * 角色（system_admin、enterprise_admin、user）
+     * 角色（SYSTEM_ADMIN、ENTERPRISE_ADMIN、user）
      */
     private String role;
 

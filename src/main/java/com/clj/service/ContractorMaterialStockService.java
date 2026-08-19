@@ -1,9 +1,10 @@
 package com.clj.service;
 
 import com.clj.domain.ContractorMaterialStock;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.clj.domain.dto.ContractorMaterialStockDto;
-import com.clj.utils.Result;
+import com.clj.domain.vo.ContractorMaterialStockVo;
 
 /**
 * @author ajie
@@ -12,15 +13,15 @@ import com.clj.utils.Result;
 */
 public interface ContractorMaterialStockService extends IService<ContractorMaterialStock> {
 
-    Result add(ContractorMaterialStock contractorMaterialStock);
+    void add(ContractorMaterialStock contractorMaterialStock);
 
-    Result delete(Long contractorMaterialId);
+    void delete(Long contractorMaterialId);
 
-    Result updateContractorMaterialStock(ContractorMaterialStockDto contractorMaterialStockDto);
+    void updateContractorMaterialStock(ContractorMaterialStockDto contractorMaterialStockDto);
 
-    Result getByPage(Integer pageNum, Integer pageSize);
+    Page<ContractorMaterialStockVo> getByPage(Integer pageNum, Integer pageSize);
 
-    Result searchByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<ContractorMaterialStockVo> searchByPage(String keyword, Integer pageNum, Integer pageSize);
 
-    Result getByUserId(String keyword,Integer pageNum,Integer pageSize);
+    Page<ContractorMaterialStockVo> getByUserId(String keyword,Integer pageNum,Integer pageSize);
 }

@@ -1,8 +1,9 @@
 package com.clj.service;
 
 import com.clj.domain.MaterialStockRecord;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clj.utils.Result;
+import com.clj.domain.vo.MaterialStockRecordVo;
 
 /**
 * @author ajie
@@ -11,11 +12,11 @@ import com.clj.utils.Result;
 */
 public interface MaterialStockRecordService extends IService<MaterialStockRecord> {
 
-    Result add(MaterialStockRecord materialStockRecord);
+    void add(MaterialStockRecord materialStockRecord);
 
-    Result delete(Long stockRecordId);
+    void delete(Long stockRecordId);
 
-    Result update(MaterialStockRecord materialStockRecord);
+    void update(MaterialStockRecord materialStockRecord);
 
-    Result getByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<MaterialStockRecordVo> getByPage(String keyword, Integer pageNum, Integer pageSize);
 }

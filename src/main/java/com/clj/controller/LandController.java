@@ -1,11 +1,14 @@
 package com.clj.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.clj.common.result.Result;
 import com.clj.domain.Land;
 import com.clj.service.LandService;
-import com.clj.utils.Result;
-import com.clj.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -14,33 +17,42 @@ public class LandController {
     private final LandService landService;
 
     @PostMapping("/addLand")
-    public Result addLand(@RequestBody Land land) {
-        return landService.addLand(land);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> addLand(@RequestBody Land land) {
+        landService.addLand(land);
+        return Result.success();
     }
 
     @DeleteMapping("/deleteLand/{landId}")
-    public Result deleteLand(@PathVariable("landId") Long landId) {
-        return landService.deleteLand(landId);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> deleteLand(@PathVariable("landId") Long landId) {
+        landService.deleteLand(landId);
+        return Result.success();
     }
 
     @PutMapping("/updateLand")
-    public Result updateLand(@RequestBody Land land) {
-        return landService.updateLand(land);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> updateLand(@RequestBody Land land) {
+        landService.updateLand(land);
+        return Result.success();
     }
 
     @GetMapping("/getLandsByPage/{pageNum}/{pageSize}")
-    public Result getLandsByPage(@PathVariable("pageNum") Integer pageNum,@PathVariable("pageSize") Integer pageSize) {
-        return landService.getLandsByPage(pageNum, pageSize);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
+    public Result<Page<Land>> getLandsByPage(@PathVariable("pageNum") Integer pageNum,@PathVariable("pageSize") Integer pageSize) {
+        return Result.success(landService.getLandsByPage(pageNum, pageSize));
     }
     @GetMapping("/searchLandsByPage/{keyword}/{pageNum}/{pageSize}")
-    public Result searchLandsByPage(@PathVariable("keyword") String keyword
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
+    public Result<Page<Land>> searchLandsByPage(@PathVariable("keyword") String keyword
             ,@PathVariable("pageNum") Integer pageNum,@PathVariable("pageSize") Integer pageSize) {
-        return landService.searchLandsByPage(keyword, pageNum, pageSize);
+        return Result.success(landService.searchLandsByPage(keyword, pageNum, pageSize));
     }
 
     @GetMapping("/getAll")
-    public Result getAll() {
-        return landService.getAll();
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
+    public Result<List<Land>> getAll() {
+        return Result.success(landService.getAll());
     }
 
 }

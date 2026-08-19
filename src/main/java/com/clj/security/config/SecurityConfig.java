@@ -2,8 +2,10 @@ package com.clj.security.config;
 
 import com.clj.security.filter.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.config.Customizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -48,12 +50,19 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
+                // 跨域（读取 MvcConfig 中的 CORS 映射配置）
+                .cors(Customizer.withDefaults())
+
                 // URL 权限配置
                 .authorizeHttpRequests(auth -> auth
-                        // 登录、注册、Swagger 文档放行
+                        // CORS 预检请求放行
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // 登录、登出、验证码、Swagger 文档放行
                         .requestMatchers(
-                                "/api/auth/login",
-                                "/api/auth/register",
+//                                "/**"  //测试专用
+                                "/auth/login",
+                                "/auth/logout",
+                                "/sms/send-code",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/doc.html",
@@ -77,7 +86,6 @@ public class SecurityConfig {
 
     /**
      * 暴露 AuthenticationManager Bean
-     * 供 AuthController 登录使用
      */
     @Bean
     public AuthenticationManager authenticationManager(

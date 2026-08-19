@@ -1,11 +1,11 @@
 package com.clj.service;
 
-import com.clj.domain.EquipmentApply;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.domain.EquipmentApply;
 import com.clj.domain.dto.EquipmentApplyDto;
 import com.clj.domain.vo.EquipmentApplyVo;
-import com.clj.domain.vo.MaterialApplyVo;
-import com.clj.utils.Result;
+import com.clj.domain.vo.EquipmentDetailVo;
 
 /**
 * @author ajie
@@ -14,21 +14,21 @@ import com.clj.utils.Result;
 */
 public interface EquipmentApplyService extends IService<EquipmentApply> {
 
-    Result add(EquipmentApplyDto equipmentApplyDto);
+    void add(EquipmentApplyDto equipmentApplyDto);
 
-    Result delete(Integer applyId);
+    void delete(Integer applyId);
 
-    Result updateApply(EquipmentApplyDto equipmentApplyDto);
+    void updateApply(EquipmentApplyDto equipmentApplyDto);
 
-    Result getApplyByPage(Integer pageNum, Integer pageSize);
+    Page<EquipmentApplyVo> getApplyByPage(Integer pageNum, Integer pageSize);
 
-    Result searchApplyByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<EquipmentApplyVo> searchApplyByPage(String keyword, Integer pageNum, Integer pageSize);
 
-    Result updateApplyStatus(Long applyId, Integer status);
+    void updateApplyStatus(Long applyId, Integer status);
 
     EquipmentApplyVo getApplyVoById(Long applyId);
 
-    Result getEquipmentNameAndTypeNameById(Long applyId);
+    EquipmentDetailVo getEquipmentNameAndTypeNameById(Long applyId);
 
-    Result getMyApplies(String keyword, Integer pageNum, Integer pageSize);
+    Page<EquipmentApplyVo> getMyApplies(String keyword, Integer pageNum, Integer pageSize);
 }

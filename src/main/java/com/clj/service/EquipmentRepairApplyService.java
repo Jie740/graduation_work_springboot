@@ -1,9 +1,9 @@
 package com.clj.service;
 
-import com.clj.domain.EquipmentRepairApply;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.clj.domain.EquipmentRepairApply;
 import com.clj.domain.dto.EquipmentRepairApplyDto;
-import com.clj.utils.Result;
+import com.clj.domain.vo.EquipmentRepairApplyVo;
 
 /**
 * @author ajie
@@ -12,7 +12,7 @@ import com.clj.utils.Result;
 */
 public interface EquipmentRepairApplyService extends IService<EquipmentRepairApply> {
 
-    Result add(EquipmentRepairApplyDto equipmentRepairApplyDto);
+    void add(EquipmentRepairApplyDto equipmentRepairApplyDto);
 
-    Result getRepairApplyByRecordId(Long recordId, String applicantName, String phone);
+    EquipmentRepairApplyVo getRepairApplyByRecordId(Long recordId, String applicantName, String phone);
 }

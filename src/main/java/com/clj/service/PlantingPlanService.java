@@ -1,9 +1,13 @@
 package com.clj.service;
 
 import com.clj.domain.PlantingPlan;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.clj.domain.dto.PlantingPlanDto;
-import com.clj.utils.Result;
+import com.clj.domain.vo.PlantingPlanVo;
+
+import java.util.List;
+import java.util.Map;
 
 /**
 * @author ajie
@@ -11,23 +15,23 @@ import com.clj.utils.Result;
 * @createDate 2026-03-02 20:08:04
 */
 public interface PlantingPlanService extends IService<PlantingPlan> {
-    Result add(PlantingPlanDto plantingPlanDto);
-    Result delete(Long id);
-    Result updatePlantingPlan(PlantingPlan plantingPlan);
-    Result getPlantingPlansByPage(Integer pageNum, Integer pageSize);
-    Result searchPlantingPlansByPage(String keyword, Integer pageNum, Integer pageSize);
+    void add(PlantingPlanDto plantingPlanDto);
+    void delete(Long id);
+    void updatePlantingPlan(PlantingPlan plantingPlan);
+    Page<PlantingPlanVo> getPlantingPlansByPage(Integer pageNum, Integer pageSize);
+    Page<PlantingPlanVo> searchPlantingPlansByPage(String keyword, Integer pageNum, Integer pageSize);
 
-    Result updateStatus(Long planId, Integer status);
+    void updateStatus(Long planId, Integer status);
 
-    Result getPlantingPlanById(Long planId);
+    PlantingPlanVo getPlantingPlanById(Long planId);
 
-    Result getPublishedPlantingPlans();
+    List<PlantingPlanVo> getPublishedPlantingPlans();
 
-    Result getByLandId(Long landId);
+    PlantingPlan getByLandId(Long landId);
 
-    Result getMyPlans();
+    List<PlantingPlanVo> getMyPlans();
 
-    Result getPublishedPlantingPlanByUserId();
+    List<PlantingPlanVo> getPublishedPlantingPlanByUserId();
 
-    Result getUserNameByPlanId(Long planId);
+    Map<String, String> getUserNameByPlanId(Long planId);
 }

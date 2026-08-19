@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clj.ai.mapper.AiKnowledgeBaseMapper">
+
+    <resultMap id="BaseResultMap" type="com.clj.ai.domain.AiKnowledgeBase">
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="description" column="description" />
+            <result property="status" column="status" />
+            <result property="documentCount" column="document_count" />
+            <result property="crtim" column="crtim" />
+            <result property="cruid" column="cruid" />
+            <result property="uptim" column="uptim" />
+            <result property="upuid" column="upuid" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="deletedAt" column="deleted_at" />
+            <result property="deletedBy" column="deleted_by" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,description,status,document_count,crtim,
+        cruid,uptim,upuid,is_deleted,deleted_at,
+        deleted_by
+    </sql>
+</mapper>

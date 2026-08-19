@@ -3,16 +3,18 @@ package com.clj.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.clj.common.exception.BusinessException;
 import com.clj.domain.User;
 import com.clj.domain.vo.UserVo;
-import com.clj.service.UserService;
 import com.clj.mapper.UserMapper;
-import com.clj.utils.Result;
-import com.clj.utils.UserHolder;
+import com.clj.security.util.SecurityUtil;
+import com.clj.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
 * @author ajie
@@ -23,172 +25,153 @@ import java.util.HashMap;
 @RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService{
+
+    private final PasswordEncoder passwordEncoder;
+
     @Override
-    public Result getUsersByPage(Integer pageNum, Integer pageSize) {
-        Page<User> userPage = new Page<>(pageNum, pageSize);
-        return Result.ok(this.lambdaQuery().page(userPage));
+    public Page<User> getUsersByPage(Integer pageNum, Integer pageSize) {
+        return this.lambdaQuery().page(new Page<>(pageNum, pageSize));
     }
 
     @Override
-    public Result addUser(User user) {
+    public void addUser(User user) {
         // 检查用户名是否存在
         Long count = this.lambdaQuery()
             .eq(User::getUsername, user.getUsername())
             .count();
         if (count > 0) {
-            return Result.error("用户名已存在");
+            throw new BusinessException("用户名已存在");
         }
-        return this.save(user) ? Result.ok() : Result.error("添加失败");
+        // 密码 BCrypt 加密存储
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (!this.save(user)) {
+            throw new BusinessException("添加失败");
+        }
     }
 
     @Override
-    public Result deleteUser(Integer id) {
-        return this.removeById(id)?Result.ok():Result.error("删除失败");
+    public void deleteUser(Integer id) {
+        if (!this.removeById(id)) {
+            throw new BusinessException("删除失败");
+        }
     }
 
     @Override
-    public Result updateUser(User user) {
+    public void updateUser(User user) {
         // 1. 检查用户名是否被其他用户使用
         if (user.getUsername() != null) {
             User existingUser = this.lambdaQuery()
                 .eq(User::getUsername, user.getUsername())
                 .ne(User::getUserId, user.getUserId())  // 排除当前用户自己
                 .one();
-            
+
             if (existingUser != null) {
-                return Result.error("用户名已存在");
+                throw new BusinessException("用户名已存在");
             }
         }
-        
+
         // 2. 执行更新
-        return this.updateById(user) ? Result.ok() : Result.error("修改失败");
+        if (!this.updateById(user)) {
+            throw new BusinessException("修改失败");
+        }
     }
 
     @Override
-    public Result searchUsersByPage(String keyword, Integer pageNum, Integer pageSize) {
-        if(keyword==null){
+    public Page<User> searchUsersByPage(String keyword, Integer pageNum, Integer pageSize) {
+        if (keyword == null) {
             return getUsersByPage(pageNum, pageSize);
         }
-        Page<User> page = new Page<>(pageNum, pageSize);
-        Page<User> userPage = this.lambdaQuery()
-//            .and(wrapper -> wrapper
-//                .likeRight(User::getName, keyword)
-//                .or()
-//                .likeRight(User::getPhone, keyword)
-//            )
-                .like(User::getName,keyword)
-            .page(page);
-        return Result.ok(userPage);
+        return this.lambdaQuery()
+                .like(User::getName, keyword)
+            .page(new Page<>(pageNum, pageSize));
     }
 
     @Override
-    public Result updateUserStatus(Integer id, Integer status) {
-        return this.lambdaUpdate()
+    public void updateUserStatus(Integer id, Integer status) {
+        if (!this.lambdaUpdate()
             .eq(User::getUserId, id)
             .set(User::getStatus, status)
-            .update() ? Result.ok() : Result.error("修改失败");
+            .update()) {
+            throw new BusinessException("修改失败");
+        }
     }
 
     @Override
-    public Result searchUserByNameAndPhone(String name, String phone) {
+    public Map<String, String> searchUserByNameAndPhone(String name, String phone) {
         User one = this.lambdaQuery().eq(User::getName, name)
                 .eq(User::getPhone, phone)
-                .eq(User::getRole, "user")
+                .eq(User::getRole, "USER")
                 .one();
-        if (one == null){
-            return Result.error("用户不存在");
+        if (one == null) {
+            throw new BusinessException("用户不存在");
         }
-        HashMap<String, String> map = new HashMap<>();
+        Map<String, String> map = new HashMap<>();
         map.put("userId", one.getUserId().toString());
-        return Result.ok(map);
+        return map;
     }
 
     @Override
-    public Result getContractorsByPage(Integer pageNum, Integer pageSize) {
-        return Result.ok(this.lambdaQuery()
-            .eq(User::getRole, "user")
-                        .or()
-                .eq(User::getRole, "enterprise_admin")
-            .page(new Page<>(pageNum, pageSize)));
+    public Page<User> getContractorsByPage(Integer pageNum, Integer pageSize) {
+        return this.lambdaQuery()
+            .and(w -> w.eq(User::getRole, "USER").or().eq(User::getRole, "ENTERPRISE_ADMIN"))
+            .page(new Page<>(pageNum, pageSize));
     }
 
     @Override
-    public Result searchContractorsByPage(String keyword, Integer pageNum, Integer pageSize) {
-        if (keyword == null){
+    public Page<User> searchContractorsByPage(String keyword, Integer pageNum, Integer pageSize) {
+        if (keyword == null) {
             return getContractorsByPage(pageNum, pageSize);
         }
-        return Result.ok(this.lambdaQuery()
-                        .ne(User::getRole, "system_admin")
-            .like(User::getName, keyword)
-                        .or()
-                .likeRight(User::getPhone, keyword)
-            .page(new Page<>(pageNum, pageSize)));
+        return this.lambdaQuery()
+                .ne(User::getRole, "SYSTEM_ADMIN")
+                .and(w -> w.like(User::getName, keyword)
+                        .or().likeRight(User::getPhone, keyword))
+            .page(new Page<>(pageNum, pageSize));
     }
 
     @Override
-    public Result getUserInfo() {
-        // 1. 从 ThreadLocal 获取当前用户ID
-        Long userId = UserHolder.getUserId();
-        if (userId == null) {
-            return Result.error("未登录或登录已过期");
-        }
-
-        // 2. 查询用户信息
-        User user = this.getById(userId);
+    public UserVo getUserInfo() {
+        // 从 SecurityContext 获取当前用户ID
+        User user = this.getById(SecurityUtil.getUserId());
         if (user == null) {
-            return Result.error("用户不存在");
+            throw new BusinessException("用户不存在");
         }
-
-        // 3. 转换为 UserVO
-        UserVo userVo = BeanUtil.copyProperties(user, UserVo.class);
-
-        return Result.ok(userVo);
+        return BeanUtil.copyProperties(user, UserVo.class);
     }
 
     @Override
-    public Result getName() {
-        // 1. 从 ThreadLocal 获取当前用户ID
-        Long userId = UserHolder.getUserId();
-        if (userId == null) {
-            return Result.error("未登录或登录已过期");
-        }
-
-        // 2. 查询用户信息
-        User user = this.getById(userId);
+    public Map<String, String> getName() {
+        User user = this.getById(SecurityUtil.getUserId());
         if (user == null) {
-            return Result.error("用户不存在");
+            throw new BusinessException("用户不存在");
         }
-
-        HashMap<String, String> map = new HashMap<>();
+        Map<String, String> map = new HashMap<>();
         map.put("name", user.getName());
-        return Result.ok(map);
+        return map;
     }
 
     @Override
-    public Result updatePassword(String oldPassword, String newPassword) {
-        // 1. 从 ThreadLocal 获取当前用户ID
-        Long userId = UserHolder.getUserId();
-        if (userId == null) {
-            return Result.error("未登录或登录已过期");
-        }
-
-        // 2. 查询用户信息
-        User user = this.getById(userId);
+    public void updatePassword(String oldPassword, String newPassword) {
+        User user = this.getById(SecurityUtil.getUserId());
         if (user == null) {
-            return Result.error("用户不存在");
+            throw new BusinessException("用户不存在");
         }
 
-        // 3. 验证旧密码
-        if (!oldPassword.equals(user.getPassword())) {
-            return Result.error("旧密码错误");
+        // 兼容 BCrypt 与存量明文密码
+        String dbPassword = user.getPassword();
+        boolean oldMatched = dbPassword.startsWith("$2")
+                ? passwordEncoder.matches(oldPassword, dbPassword)
+                : dbPassword.equals(oldPassword);
+        if (!oldMatched) {
+            throw new BusinessException("旧密码错误");
         }
 
-        // 4. 更新新密码
-        boolean updated = this.lambdaUpdate()
-                .eq(User::getUserId, userId)
-                .set(User::getPassword, newPassword)
-                .update();
-
-        return updated ? Result.ok("密码修改成功") : Result.error("密码修改失败");
+        // 新密码 BCrypt 加密存储
+        if (!this.lambdaUpdate()
+                .eq(User::getUserId, user.getUserId())
+                .set(User::getPassword, passwordEncoder.encode(newPassword))
+                .update()) {
+            throw new BusinessException("密码修改失败");
+        }
     }
 }

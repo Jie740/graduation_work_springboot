@@ -2,7 +2,8 @@ package com.clj.service;
 
 import com.clj.domain.MaterialType;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clj.utils.Result;
+
+import java.util.List;
 
 /**
 * @author ajie
@@ -11,12 +12,12 @@ import com.clj.utils.Result;
 */
 public interface MaterialTypeService extends IService<MaterialType> {
 
-    Result add(String materialTypeName);
+    void add(String materialTypeName);
 
-    Result delete(Long materialTypeId);
+    void delete(Long materialTypeId);
 
-    Result updateMaterialType(MaterialType materialType);
+    void updateMaterialType(MaterialType materialType);
 
-    Result getAll();
+    List<MaterialType> getAll();
 
 }

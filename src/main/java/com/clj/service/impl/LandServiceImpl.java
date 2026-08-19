@@ -2,12 +2,12 @@ package com.clj.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.clj.common.exception.BusinessException;
 import com.clj.domain.Land;
 import com.clj.domain.LandAllocation;
 import com.clj.service.LandAllocationService;
 import com.clj.service.LandService;
 import com.clj.mapper.LandMapper;
-import com.clj.utils.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,40 +25,46 @@ public class LandServiceImpl extends ServiceImpl<LandMapper, Land>
     implements LandService{
 
     @Override
-    public Result addLand(Land land) {
+    public void addLand(Land land) {
         if (this.lambdaQuery().eq(Land::getLandName, land.getLandName()).exists()){
-            return Result.error("地块名已存在");
+            throw new BusinessException("地块名已存在");
         }
-        return this.save(land)?Result.ok():Result.error("添加失败");
+        if (!this.save(land)){
+            throw new BusinessException("添加失败");
+        }
     }
 
     @Override
-    public Result deleteLand(Long landId) {
-        return this.removeById(landId)?Result.ok():Result.error("删除失败");
+    public void deleteLand(Long landId) {
+        if (!this.removeById(landId)){
+            throw new BusinessException("删除失败");
+        }
     }
 
     @Override
-    public Result updateLand(Land land) {
-        return this.updateById(land)?Result.ok():Result.error("修改失败");
+    public void updateLand(Land land) {
+        if (!this.updateById(land)){
+            throw new BusinessException("修改失败");
+        }
     }
 
     @Override
-    public Result getLandsByPage(Integer pageNum, Integer pageSize) {
+    public Page<Land> getLandsByPage(Integer pageNum, Integer pageSize) {
         Page<Land> page=new Page<>(pageNum,pageSize);
-        return Result.ok(this.lambdaQuery().page(page));
+        return this.lambdaQuery().page(page);
     }
 
     //查询条件：地块名、地块位置
     @Override
-    public Result searchLandsByPage(String keyword, Integer pageNum, Integer pageSize) {
+    public Page<Land> searchLandsByPage(String keyword, Integer pageNum, Integer pageSize) {
         if (keyword == null){
             return getLandsByPage(pageNum, pageSize);
         }
         Page<Land> page = new Page<>(pageNum, pageSize);
-        return Result.ok(this.lambdaQuery().likeRight(Land::getLandName, keyword)
+        return this.lambdaQuery().likeRight(Land::getLandName, keyword)
                 .or()
                 .likeRight(Land::getLocation, keyword)
-                .page(page));
+                .page(page);
     }
 
 
@@ -71,13 +77,9 @@ public class LandServiceImpl extends ServiceImpl<LandMapper, Land>
 //    }
 
     @Override
-    public Result getAll() {
-        return Result.ok(this.list());
+    public List<Land> getAll() {
+        return this.list();
     }
 
 
 }
-
-
-
-

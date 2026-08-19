@@ -1,0 +1,25 @@
+# ==================== 测试环境配置 ====================
+spring:
+  datasource:
+    mysql:
+      username: root
+      password: 123
+      url: jdbc:mysql://192.168.127.128:3306/smart_agriculture?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    postgres:
+      jdbc-url: jdbc:postgresql://192.168.127.128:5432/agriculture_ai
+      username: postgres
+      password: 123456
+      driver-class-name: org.postgresql.Driver
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: 192.168.127.128
+      port: 6379
+      database: 2
+
+logging:
+  level:
+    com.clj.mapper: debug

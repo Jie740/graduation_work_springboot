@@ -1,10 +1,14 @@
 package com.clj.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.clj.common.result.Result;
 import com.clj.domain.Crop;
 import com.clj.service.CropService;
-import com.clj.utils.Result;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -12,31 +16,40 @@ import org.springframework.web.bind.annotation.*;
 public class CropController {
     final CropService cropService;
     @PostMapping("/addCrop")
-    public Result add(@RequestBody Crop crop) {
-        return cropService.add(crop);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> add(@RequestBody Crop crop) {
+        cropService.add(crop);
+        return Result.success();
     }
     @DeleteMapping("/deleteCrop/{cropId}")
-    public Result delete(@PathVariable("cropId") Integer cropId) {
-        return cropService.delete(cropId);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> delete(@PathVariable("cropId") Integer cropId) {
+        cropService.delete(cropId);
+        return Result.success();
     }
     @PutMapping("/updateCrop")
-    public Result update(@RequestBody Crop crop) {
-        return cropService.updateCrop(crop);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> update(@RequestBody Crop crop) {
+        cropService.updateCrop(crop);
+        return Result.success();
     }
     @GetMapping("/getCropsByPage/{pageNum}/{pageSize}")
-    public Result getCropsByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
-        return cropService.getCropsByPage(pageNum, pageSize);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<Crop>> getCropsByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
+        return Result.success(cropService.getCropsByPage(pageNum, pageSize));
     }
 
     //筛选条件：农作物名、类型
 
     @GetMapping("/searchCropsByPage/{keyword}/{pageNum}/{pageSIze}")
-    public Result searchCropsByPage(@PathVariable("keyword") String keyword, @PathVariable("pageNum") Integer pageNum, @PathVariable("pageSIze") Integer pageSize) {
-        return cropService.searchCropsByPage(keyword, pageNum, pageSize);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<Crop>> searchCropsByPage(@PathVariable("keyword") String keyword, @PathVariable("pageNum") Integer pageNum, @PathVariable("pageSIze") Integer pageSize) {
+        return Result.success(cropService.searchCropsByPage(keyword, pageNum, pageSize));
     }
 
     @GetMapping("/getAll")
-    public Result getAll() {
-        return Result.ok(cropService.list());
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<List<Crop>> getAll() {
+        return Result.success(cropService.list());
     }
 }

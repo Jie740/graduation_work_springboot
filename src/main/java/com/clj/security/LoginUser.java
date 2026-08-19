@@ -50,6 +50,11 @@ public class LoginUser implements UserDetails {
     private Integer status;
 
     /**
+     * 角色编码（SYSTEM_ADMIN、ENTERPRISE_ADMIN、user）
+     */
+    private String role;
+
+    /**
      * 权限编码列表
      * 格式：角色 ROLE_xxx + 权限 perm:xxx
      */

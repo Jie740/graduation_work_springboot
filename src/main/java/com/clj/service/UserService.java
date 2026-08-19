@@ -1,8 +1,11 @@
 package com.clj.service;
 
-import com.clj.domain.User;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clj.utils.Result;
+import com.clj.domain.User;
+import com.clj.domain.vo.UserVo;
+
+import java.util.Map;
 
 /**
 * @author ajie
@@ -10,28 +13,27 @@ import com.clj.utils.Result;
 * @createDate 2026-03-02 20:07:16
 */
 public interface UserService extends IService<User> {
-    public Result getUsersByPage(Integer pageNum, Integer pageSize);
+    Page<User> getUsersByPage(Integer pageNum, Integer pageSize);
 
-    Result addUser(User user);
+    void addUser(User user);
 
-    Result deleteUser(Integer id);
+    void deleteUser(Integer id);
 
-    Result updateUser(User user);
+    void updateUser(User user);
 
-    Result searchUsersByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<User> searchUsersByPage(String keyword, Integer pageNum, Integer pageSize);
 
-    Result updateUserStatus(Integer id, Integer status);
+    void updateUserStatus(Integer id, Integer status);
 
-    Result searchUserByNameAndPhone(String name, String phone);
+    Map<String, String> searchUserByNameAndPhone(String name, String phone);
 
-    Result getContractorsByPage(Integer pageNum, Integer pageSize);
+    Page<User> getContractorsByPage(Integer pageNum, Integer pageSize);
 
-    Result searchContractorsByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<User> searchContractorsByPage(String keyword, Integer pageNum, Integer pageSize);
 
-    Result getUserInfo();
+    UserVo getUserInfo();
 
+    Map<String, String> getName();
 
-    Result getName();
-
-    Result updatePassword(String oldPassword, String newPassword);
+    void updatePassword(String oldPassword, String newPassword);
 }

@@ -1,8 +1,8 @@
 package com.clj.security.handler;
 
 import cn.hutool.json.JSONUtil;
-import com.exam.common.result.Result;
-import com.exam.common.result.ResultCode;
+import com.clj.common.result.Result;
+import com.clj.common.result.ResultCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;

@@ -6,14 +6,15 @@ import com.alibaba.dashscope.aigc.generation.GenerationParam;
 import com.alibaba.dashscope.aigc.generation.GenerationResult;
 import com.alibaba.dashscope.common.Message;
 import com.alibaba.dashscope.common.Role;
-import com.clj.utils.Result;
+import com.clj.common.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -34,7 +35,7 @@ public class DashScopeService {
     private final Generation gen = new Generation();
 
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     private static final String CHAT_PREFIX = "ai:chat:";
     private static final String COUNT_PREFIX = "ai:count:";
@@ -52,50 +53,51 @@ public class DashScopeService {
             "果树修剪有什么技巧"
     ));
 
-    public Result callWithContext(String userId, String userQuestion) {
+    public Map<String, String> callWithContext(String userId, String userQuestion) {
 
         String redisKey = CHAT_PREFIX + userId;
         String countKey = COUNT_PREFIX + userId;
 
         // ================== ⭐ 0. 特殊问题拦截（避免AI乱算） ==================
         if (userQuestion.contains("几次")) {
-            String count = redisTemplate.opsForValue().get(countKey);
-            count = (count == null) ? "0" : count;
+            Object countObj = redisTemplate.opsForValue().get(countKey);
+            String count = countObj == null ? "0" : String.valueOf(countObj);
 
-            HashMap<String, String> map = new HashMap<>();
+            Map<String, String> map = new HashMap<>();
             map.put("message", "你一共问了 " + count + " 次");
-            return Result.ok(map);
+            return map;
         }
 
         // ================== ⭐ 0.5. 常见问题缓存检查 ==================
         String normalizedQuestion = normalizeQuestion(userQuestion);
         if (FAQ_QUESTIONS.contains(normalizedQuestion)) {
             String faqKey = FAQ_PREFIX + normalizedQuestion;
-            String cachedAnswer = redisTemplate.opsForValue().get(faqKey);
-            
+            Object cachedObj = redisTemplate.opsForValue().get(faqKey);
+            String cachedAnswer = cachedObj == null ? null : String.valueOf(cachedObj);
+
             if (cachedAnswer != null) {
                 log.info("命中常见问题缓存: {}", normalizedQuestion);
-                
+
                 // ================== ⭐ 保存命中缓存的问答到用户上下文 ==================
                 saveMessage(redisKey, Message.builder()
                         .role(Role.USER.getValue())
                         .content(userQuestion)
                         .build());
-                
+
                 saveMessage(redisKey, Message.builder()
                         .role(Role.ASSISTANT.getValue())
                         .content(cachedAnswer)
                         .build());
-                
+
                 // 控制长度
                 trimHistory(redisKey);
-                
-                HashMap<String, String> map = new HashMap<>();
+
+                Map<String, String> map = new HashMap<>();
                 map.put("message", cachedAnswer);
                 map.put("fromCache", "true");
-                return Result.ok(map);
+                return map;
             }
-            
+
             log.info("未命中常见问题缓存，将调用AI并缓存: {}", normalizedQuestion);
         }
 
@@ -104,8 +106,13 @@ public class DashScopeService {
         redisTemplate.expire(countKey, 1, TimeUnit.HOURS);
 
         // ================== 2. 获取历史记录 ==================
-        List<String> historyJsonList = redisTemplate.opsForList()
+        List<Object> historyObjList = redisTemplate.opsForList()
                 .range(redisKey, 0, -1);
+        List<String> historyJsonList = historyObjList == null
+                ? new ArrayList<>()
+                : historyObjList.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.toList());
 
         List<Message> messages = new ArrayList<>();
 
@@ -116,7 +123,7 @@ public class DashScopeService {
                 .build());
 
         // ================== ⭐ 3. 历史记录（只取最近N轮） ==================
-        if (historyJsonList != null && !historyJsonList.isEmpty()) {
+        if (!historyJsonList.isEmpty()) {
 
             int start = Math.max(historyJsonList.size() - MAX_HISTORY * 2, 0);
 
@@ -162,7 +169,7 @@ public class DashScopeService {
 
             long endTime = System.currentTimeMillis();
             log.info("AI响应耗时: {} ms", (endTime - startTime));
-            
+
             // ================== ⭐ 7.5. 打印AI回复内容 ==================
             log.info("========== AI回复内容 ==========");
             log.info("{}", content);
@@ -191,14 +198,14 @@ public class DashScopeService {
             trimHistory(redisKey);
 
             // ================== 10. 返回 ==================
-            HashMap<String, String> map = new HashMap<>();
+            Map<String, String> map = new HashMap<>();
             map.put("message", content);
 
-            return Result.ok(map);
+            return map;
 
         } catch (Exception e) {
             log.error("AI调用异常", e);
-            return Result.error("AI服务异常");
+            throw new BusinessException("AI服务异常");
         }
     }
 
@@ -231,23 +238,24 @@ public class DashScopeService {
         // 去除首尾空格，统一标点
         return question.trim()
                 .replaceAll("\\s+", "")  // 去除所有空格
-                .replaceAll("[\uff0c\uff0e\uff1f\uff01\u3001]", ""); // 去除中文标点
+                .replaceAll("[，．？！、]", ""); // 去除中文标点
     }
 
     /**
      * 获取用户对话上下文
      */
-    public Result getChatHistory(String userId) {
+    public List<Message> getChatHistory(String userId) {
         String redisKey = CHAT_PREFIX + userId;
-        List<String> historyJsonList = redisTemplate.opsForList().range(redisKey, 0, -1);
-        
-        if (historyJsonList == null || historyJsonList.isEmpty()) {
-            return Result.ok(new ArrayList<>());
+        List<Object> historyObjList = redisTemplate.opsForList().range(redisKey, 0, -1);
+
+        if (historyObjList == null || historyObjList.isEmpty()) {
+            return new ArrayList<>();
         }
-        
+
         // 转换为Message对象列表
         List<Message> messages = new ArrayList<>();
-        for (String json : historyJsonList) {
+        for (Object jsonObj : historyObjList) {
+            String json = String.valueOf(jsonObj);
             try {
                 Message msg = JSONUtil.toBean(json, Message.class);
                 messages.add(msg);
@@ -255,23 +263,22 @@ public class DashScopeService {
                 log.error("解析消息失败: {}", json, e);
             }
         }
-        System.out.println(messages);
-        return Result.ok(messages);
+        log.debug("对话历史: {}", messages);
+        return messages;
     }
 
     /**
      * 清空用户对话上下文
      */
-    public Result clearChatHistory(String userId) {
+    public void clearChatHistory(String userId) {
         String redisKey = CHAT_PREFIX + userId;
         String countKey = COUNT_PREFIX + userId;
-        
+
         // 删除对话历史记录
         redisTemplate.delete(redisKey);
         // 删除计数记录
         redisTemplate.delete(countKey);
-        
+
         log.info("已清空用户 {} 的对话历史", userId);
-        return Result.ok("对话历史已清空");
     }
 }

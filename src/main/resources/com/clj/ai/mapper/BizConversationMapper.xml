@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clj.ai.mapper.BizConversationMapper">
+
+    <resultMap id="BaseResultMap" type="com.clj.domain.BizConversation">
+            <id property="id" column="id" />
+            <result property="title" column="title" />
+            <result property="userId" column="user_id" />
+            <result property="modelName" column="model_name" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="createdBy" column="created_by" />
+            <result property="createdTime" column="created_time" />
+            <result property="updatedBy" column="updated_by" />
+            <result property="updatedTime" column="updated_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,title,user_id,model_name,is_deleted,created_by,
+        created_time,updated_by,updated_time
+    </sql>
+</mapper>

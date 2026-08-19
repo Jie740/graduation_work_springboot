@@ -1,9 +1,14 @@
 package com.clj.service;
 
 import com.clj.domain.LandAllocation;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.clj.domain.dto.LandAllocationDto;
-import com.clj.utils.Result;
+import com.clj.domain.vo.ContractorInfoVo;
+import com.clj.domain.vo.ContractorLandVo;
+import com.clj.domain.vo.LandAllocationVo;
+
+import java.util.List;
 
 /**
 * @author ajie
@@ -12,17 +17,17 @@ import com.clj.utils.Result;
 */
 public interface LandAllocationService extends IService<LandAllocation> {
 
-    Result addLandAllocation(LandAllocationDto landAllocationDto);
+    void addLandAllocation(LandAllocationDto landAllocationDto);
 
-    Result deletelandAllocation(Long landAllocationId);
+    void deletelandAllocation(Long landAllocationId);
 
-    Result updateLandAllocation(LandAllocationDto dto);
+    void updateLandAllocation(LandAllocationDto dto);
 
-    Result getLandAllocationByPage(Integer pageNum, Integer pageSize);
+    Page<LandAllocationVo> getLandAllocationByPage(Integer pageNum, Integer pageSize);
 
-    Result getContractorInfoByLandId(Long landId);
+    ContractorInfoVo getContractorInfoByLandId(Long landId);
 
-    Result searchLandAllocationByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<LandAllocationVo> searchLandAllocationByPage(String keyword, Integer pageNum, Integer pageSize);
 
-    Result getMyLands();
+    List<ContractorLandVo> getMyLands();
 }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clj.ai.mapper.BizMessageMapper">
+
+    <resultMap id="BaseResultMap" type="com.clj.ai.domain.BizMessage">
+            <id property="id" column="id" />
+            <result property="conversationId" column="conversation_id" />
+            <result property="role" column="role" />
+            <result property="contentJson" column="content_json" />
+            <result property="traceJson" column="trace_json" />
+            <result property="attributes" column="attributes" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="createdBy" column="created_by" />
+            <result property="createdTime" column="created_time" />
+            <result property="updatedBy" column="updated_by" />
+            <result property="updatedTime" column="updated_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,conversation_id,role,content_json,trace_json,attributes,
+        is_deleted,created_by,created_time,updated_by,updated_time
+    </sql>
+</mapper>

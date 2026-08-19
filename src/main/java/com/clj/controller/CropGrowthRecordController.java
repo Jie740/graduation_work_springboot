@@ -1,9 +1,11 @@
 package com.clj.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.clj.common.result.Result;
 import com.clj.domain.CropGrowthRecord;
 import com.clj.service.CropGrowthRecordService;
-import com.clj.utils.Result;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -12,24 +14,32 @@ import org.springframework.web.bind.annotation.*;
 public class CropGrowthRecordController {
     final CropGrowthRecordService cropGrowthRecordService;
     @PostMapping("/add")
-    public Result add(@RequestBody CropGrowthRecord cropGrowthRecord) {
-        return cropGrowthRecordService.add(cropGrowthRecord);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> add(@RequestBody CropGrowthRecord cropGrowthRecord) {
+        cropGrowthRecordService.add(cropGrowthRecord);
+        return Result.success();
     }
     @DeleteMapping("/delete/{cropGrowthRecordId}")
-    public Result delete(@PathVariable("cropGrowthRecordId") Integer cropGrowthRecordId) {
-        return cropGrowthRecordService.delete(cropGrowthRecordId);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> delete(@PathVariable("cropGrowthRecordId") Integer cropGrowthRecordId) {
+        cropGrowthRecordService.delete(cropGrowthRecordId);
+        return Result.success();
     }
     @PutMapping("/update")
-    public Result updateCropGrowthRecord(@RequestBody CropGrowthRecord cropGrowthRecord) {
-        return cropGrowthRecordService.updateCropGrowthRecord(cropGrowthRecord);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> updateCropGrowthRecord(@RequestBody CropGrowthRecord cropGrowthRecord) {
+        cropGrowthRecordService.updateCropGrowthRecord(cropGrowthRecord);
+        return Result.success();
     }
     @GetMapping("/getCropGrowthRecordsByPage/{pageNum}/{pageSize}")
-    public Result getCropGrowthRecordsByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
-        return cropGrowthRecordService.getCropGrowthRecordsByPage(pageNum, pageSize);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<CropGrowthRecord>> getCropGrowthRecordsByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize) {
+        return Result.success(cropGrowthRecordService.getCropGrowthRecordsByPage(pageNum, pageSize));
     }
     @GetMapping("/searchCropGrowthRecordsByPage/{keyword}/{pageNum}/{pageSize}")
-    public Result searchCropGrowthRecordsByPage(@PathVariable("keyword") String keyword
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Page<CropGrowthRecord>> searchCropGrowthRecordsByPage(@PathVariable("keyword") String keyword
             ,@PathVariable("pageNum") Integer pageNum,@PathVariable("pageSize") Integer pageSize){
-        return cropGrowthRecordService.searchCropGrowthRecordsByPage(keyword, pageNum, pageSize);
+        return Result.success(cropGrowthRecordService.searchCropGrowthRecordsByPage(keyword, pageNum, pageSize));
     }
 }

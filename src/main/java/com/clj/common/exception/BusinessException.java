@@ -1,6 +1,6 @@
 package com.clj.common.exception;
 
-import com.exam.common.result.ResultCode;
+import com.clj.common.result.ResultCode;
 import lombok.Getter;
 
 /**

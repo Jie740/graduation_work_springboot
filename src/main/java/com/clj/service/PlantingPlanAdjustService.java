@@ -1,9 +1,11 @@
 package com.clj.service;
 
 import com.clj.domain.PlantingPlanAdjust;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.clj.domain.dto.PlantingPlanAdjustDto;
-import com.clj.utils.Result;
+import com.clj.domain.vo.PlantingPlanAdjustDetailVo;
+import com.clj.domain.vo.PlantingPlanAdjustVo;
 
 /**
 * @author ajie
@@ -12,20 +14,20 @@ import com.clj.utils.Result;
 */
 public interface PlantingPlanAdjustService extends IService<PlantingPlanAdjust> {
 
-    Result add(PlantingPlanAdjustDto plantingPlanAdjustDto);
-    Result delete(Long id);
-    Result updateStatus(Long id, Integer status);
-    Result getPlantingPlanAdjustsByPage(Integer pageNum, Integer pageSize);
+    void add(PlantingPlanAdjustDto plantingPlanAdjustDto);
+    void delete(Long id);
+    void updateStatus(Long id, Integer status);
+    Page<PlantingPlanAdjustVo> getPlantingPlanAdjustsByPage(Integer pageNum, Integer pageSize);
 
-    Result searchPlantingPlanAdjustsByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<PlantingPlanAdjustVo> searchPlantingPlanAdjustsByPage(String keyword, Integer pageNum, Integer pageSize);
 
-    Result updatePlantingPlanAdjust(PlantingPlanAdjustDto plantingPlanAdjustDto);
+    void updatePlantingPlanAdjust(PlantingPlanAdjustDto plantingPlanAdjustDto);
 
-    Result getPlantingPlanAdjustsByAdjustId(Long adjustId);
+    PlantingPlanAdjustDetailVo getPlantingPlanAdjustsByAdjustId(Long adjustId);
 
-    Result getPlantingPlanAdjustsByUserIdPage(Integer pageNum, Integer pageSize);
+    Page<PlantingPlanAdjustVo> getPlantingPlanAdjustsByUserIdPage(Integer pageNum, Integer pageSize);
 
-    Result getPlantingPlanAdjustsByUser(String keyword, Integer pageNum, Integer pageSize);
+    Page<PlantingPlanAdjustVo> getPlantingPlanAdjustsByUser(String keyword, Integer pageNum, Integer pageSize);
 
-    Result cancel(Long adjustId);
+    void cancel(Long adjustId);
 }

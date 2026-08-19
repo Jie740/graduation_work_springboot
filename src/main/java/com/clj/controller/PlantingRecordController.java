@@ -1,11 +1,16 @@
 package com.clj.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.clj.common.result.Result;
 import com.clj.domain.PlantingRecord;
 import com.clj.domain.dto.PlantingRecordDto;
+import com.clj.domain.vo.PlantingRecordVo;
 import com.clj.service.PlantingRecordService;
-import com.clj.utils.Result;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -13,35 +18,45 @@ import org.springframework.web.bind.annotation.*;
 public class PlantingRecordController {
     final PlantingRecordService plantingRecordService;
     @PostMapping("/add")
-    public Result add(@RequestBody PlantingRecordDto plantingRecordDto){
-        return plantingRecordService.add(plantingRecordDto);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> add(@RequestBody PlantingRecordDto plantingRecordDto){
+        plantingRecordService.add(plantingRecordDto);
+        return Result.success();
     }
     @PutMapping("/update")
-    public Result update(@RequestBody PlantingRecordDto plantingRecordDto){
-        return plantingRecordService.updatePlantingRecord(plantingRecordDto);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> update(@RequestBody PlantingRecordDto plantingRecordDto){
+        plantingRecordService.updatePlantingRecord(plantingRecordDto);
+        return Result.success();
     }
     @GetMapping("/getPlantingRecordsByPage/{pageNum}/{pageSize}")
-    public Result getPlantingRecordsByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize){
-        return plantingRecordService.getPlantingRecordsByPage(pageNum, pageSize);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
+    public Result<Page<PlantingRecordVo>> getPlantingRecordsByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize){
+        return Result.success(plantingRecordService.getPlantingRecordsByPage(pageNum, pageSize));
     }
     @DeleteMapping("/delete/{recordId}")
-    public Result delete(@PathVariable("recordId") Long recordId){
-        return plantingRecordService.delete(recordId);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> delete(@PathVariable("recordId") Long recordId){
+        plantingRecordService.delete(recordId);
+        return Result.success();
     }
 
     @GetMapping("/getAllAndCrops")
-    public Result getAllAndCrops(){
-        return plantingRecordService.getAllAndCrops();
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
+    public Result<Map<String, Object>> getAllAndCrops(){
+        return Result.success(plantingRecordService.getAllAndCrops());
     }
 
     @GetMapping("/getGrowthPlantingRecordsByPage/{pageNum}/{pageSize}")
-    public Result getGrowthPlantingRecordsByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize){
-        return plantingRecordService.getGrowthPlantingRecordsByPage(pageNum, pageSize);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
+    public Result<Page<PlantingRecordVo>> getGrowthPlantingRecordsByPage(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize){
+        return Result.success(plantingRecordService.getGrowthPlantingRecordsByPage(pageNum, pageSize));
     }
 
     @GetMapping("/getMyPlantingRecords/{pageNum}/{pageSize}")
-    public Result getMyPlantingRecords(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize){
-        return plantingRecordService.getMyPlantingRecords(pageNum, pageSize);
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
+    public Result<Page<PlantingRecordVo>> getMyPlantingRecords(@PathVariable("pageNum") Integer pageNum, @PathVariable("pageSize") Integer pageSize){
+        return Result.success(plantingRecordService.getMyPlantingRecords(pageNum, pageSize));
     }
 
 }
