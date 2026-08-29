@@ -5,29 +5,65 @@
 <mapper namespace="com.clj.ai.mapper.AiRagChunkMapper">
 
     <resultMap id="BaseResultMap" type="com.clj.ai.domain.AiRagChunk">
-            <id property="id" column="id" />
-            <result property="documentId" column="document_id" />
-            <result property="chunkIndex" column="chunk_index" />
-            <result property="content" column="content" />
-            <result property="tokenCount" column="token_count" />
-            <result property="embedding" column="embedding" />
-            <result property="embeddingModel" column="embedding_model" />
-            <result property="embeddingVersion" column="embedding_version" />
-            <result property="metadata" column="metadata" />
-            <result property="isActive" column="is_active" />
-            <result property="crtim" column="crtim" />
-            <result property="cruid" column="cruid" />
-            <result property="uptim" column="uptim" />
-            <result property="upuid" column="upuid" />
-            <result property="isDeleted" column="is_deleted" />
-            <result property="deletedAt" column="deleted_at" />
-            <result property="deletedBy" column="deleted_by" />
+        <id property="id" column="id" />
+        <result property="documentId" column="document_id" />
+        <result property="chunkIndex" column="chunk_index" />
+        <result property="text" column="text" />
+        <result property="tokenCount" column="token_count" />
+        <result property="embedding" column="embedding" typeHandler="com.clj.ai.config.PgVectorTypeHandler" />
+        <result property="embeddingModel" column="embedding_model" />
+        <result property="embeddingVersion" column="embedding_version" />
+        <result property="metadata" column="metadata" />
+        <result property="isActive" column="is_active" />
+        <result property="crtim" column="crtim" />
+        <result property="cruid" column="cruid" />
+        <result property="uptim" column="uptim" />
+        <result property="upuid" column="upuid" />
+        <result property="isDeleted" column="is_deleted" />
+        <result property="deletedAt" column="deleted_at" />
+        <result property="deletedBy" column="deleted_by" />
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,document_id,chunk_index,content,token_count,embedding,
+        id,document_id,chunk_index,text,token_count,embedding,
         embedding_model,embedding_version,metadata,is_active,crtim,
         cruid,uptim,upuid,is_deleted,deleted_at,
         deleted_by
     </sql>
+
+    <!-- 向量相似度检索：仅检索启用且未删除的分块，按余弦相似度降序，支持多知识库 -->
+    <select id="searchSimilar" resultType="com.clj.ai.dto.ChunkSimilarityDto">
+        SELECT c.id,
+        c.document_id AS documentId,
+        d.knowledge_base_id AS knowledgeBaseId,
+        kb.name       AS knowledgeBaseName,
+        c.text        AS content,
+        c.metadata::text AS metadata,
+        1 - (c.embedding &lt;=&gt; #{queryVector,jdbcType=OTHER,typeHandler=com.clj.ai.config.PgVectorTypeHandler}) AS similarity
+        FROM ai_rag_chunk c
+        JOIN ai_rag_document d ON d.id = c.document_id AND d.is_deleted = false
+        LEFT JOIN ai_knowledge_base kb ON kb.id = d.knowledge_base_id AND kb.is_deleted = false
+        WHERE c.is_active = true
+        AND c.is_deleted = false
+        AND c.embedding IS NOT NULL
+        <if test="knowledgeBaseIds != null and knowledgeBaseIds.size() > 0">
+            AND d.knowledge_base_id IN
+            <foreach collection="knowledgeBaseIds" item="kbId" open="(" separator="," close=")">
+                #{kbId}
+            </foreach>
+        </if>
+        ORDER BY c.embedding &lt;=&gt; #{queryVector,jdbcType=OTHER,typeHandler=com.clj.ai.config.PgVectorTypeHandler}
+        LIMIT #{topK}
+    </select>
+
+    <select id="selectByDocumentId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM ai_rag_chunk
+        WHERE document_id = #{documentId}
+        ORDER BY chunk_index
+    </select>
+
+    <delete id="deleteByDocumentId">
+        DELETE FROM ai_rag_chunk WHERE document_id = #{documentId}
+    </delete>
 </mapper>

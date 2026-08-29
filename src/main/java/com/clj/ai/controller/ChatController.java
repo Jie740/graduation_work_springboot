@@ -3,23 +3,13 @@ package com.clj.ai.controller;
 import com.clj.ai.dto.ChatRequestDto;
 import com.clj.ai.service.AssistantService;
 import com.clj.ai.util.MessageUtil;
-import com.clj.common.exception.BusinessException;
-import dev.langchain4j.data.message.Content;
-import dev.langchain4j.data.message.ImageContent;
-import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.request.ChatRequest;
-import dev.langchain4j.model.chat.response.*;
+import dev.langchain4j.service.TokenStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import reactor.core.publisher.Flux;
-
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -27,19 +17,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatController {
 
-
     private final AssistantService assistantService;
     private final MessageUtil messageUtil;
 
-
-    //    非流式输出
-    @PostMapping("/chat")
-    public ChatResponse chat(@RequestBody ChatRequestDto chatRequestDto) {
-        UserMessage userMessage = messageUtil.buildUserMessage(chatRequestDto);
-        return assistantService.chat(userMessage);
-    }
-
-    //    流式输出
+    /**
+     * 流式输出接口
+     * 支持模型自主判断是否调用 RAG 检索工具
+     */
     @GetMapping(
             value = "/chat-stream",
             produces = MediaType.TEXT_EVENT_STREAM_VALUE
@@ -48,60 +32,68 @@ public class ChatController {
         // 0L不设置超时，生产建议改成30_000（30秒），防止连接泄露
         SseEmitter emitter = new SseEmitter(0L);
 
-        assistantService.chatStream(
-                messageUtil.buildUserMessage(chatRequestDto),
-                new StreamingChatResponseHandler() {
+        try {
+            UserMessage userMessage = messageUtil.buildUserMessage(chatRequestDto);
 
-                    @Override
-                    public void onPartialResponse(String partialResponse) {
-//                        log.info("onPartialResponse:{} " , partialResponse);
+            // 使用 TokenStream 支持工具调用
+            TokenStream tokenStream = assistantService.chatStream(userMessage);
+
+            // 订阅 TokenStream 的事件
+            tokenStream
+                    .onPartialResponse(token -> {
                         try {
-                            // ✅ 关键：把每一段token推送给前端
-                            emitter.send(SseEmitter.event().data(partialResponse));
+                            // 发送普通文本响应
+                            if (token != null && !token.isEmpty()) {
+                                emitter.send(SseEmitter.event().data(token));
+                            }
                         } catch (Exception e) {
-                            // 发送失败，关闭SSE连接
+                            log.error("发送部分响应失败", e);
                             emitter.completeWithError(e);
                         }
-                    }
-
-                    @Override
-                    public void onPartialThinking(PartialThinking partialThinking) {
-                        log.info("onPartialThinking:{} " , partialThinking);
+                    })
+                    .beforeToolExecution(beforeToolExecution -> {
+                        // 工具即将执行：通知前端正在检索知识库
                         try {
-                            // 如果要输出思考过程，也可以下发，前端区分类型
+                            log.info("模型即将调用工具: {}", beforeToolExecution.request().name());
                             emitter.send(SseEmitter.event()
-                                    .name("thinking")
-                                    .data(partialThinking.text()));
+                                    .name("tool_call")
+                                    .data("正在检索知识库..."));
                         } catch (Exception e) {
+                            log.error("发送工具调用事件失败", e);
+                        }
+                    })
+                    .onToolExecuted(toolExecution -> {
+                        // 工具执行完成
+                        log.info("模型工具调用完成: {}", toolExecution.request().name());
+                    })
+                    .onCompleteResponse(response -> {
+                        try {
+                            log.info("流式响应完成");
+                            emitter.send(SseEmitter.event().name("done").data(""));
+                            emitter.complete();
+                        } catch (Exception e) {
+                            log.error("完成响应时出错", e);
                             emitter.completeWithError(e);
                         }
-                    }
-
-                    @Override
-                    public void onPartialToolCall(PartialToolCall partialToolCall) {
-                        log.info("onPartialToolCall:{} " , partialToolCall);
-                    }
-
-                    @Override
-                    public void onCompleteToolCall(CompleteToolCall completeToolCall) {
-                        log.info("onCompleteToolCall:{} " , completeToolCall);
-                    }
-
-                    @Override
-                    public void onCompleteResponse(ChatResponse completeResponse) {
-                        log.info("onCompleteResponse:{} " , completeResponse);
-                        // ✅ 流式全部结束，通知浏览器关闭连接
-                        emitter.complete();
-                    }
-
-                    @Override
-                    public void onError(Throwable error) {
-                        // ✅ 异常的时候关闭SSE
+                    })
+                    .onError(error -> {
+                        log.error("流式响应出错", error);
+                        try {
+                            emitter.send(SseEmitter.event()
+                                    .name("error")
+                                    .data("处理出错: " + error.getMessage()));
+                        } catch (Exception e) {
+                            log.error("发送错误事件失败", e);
+                        }
                         emitter.completeWithError(error);
-                        throw  new BusinessException(error.getMessage());
-                    }
-                }
-        );
+                    })
+                    .start();
+
+        } catch (Exception e) {
+            log.error("启动流式响应失败", e);
+            emitter.completeWithError(e);
+        }
+
         return emitter;
     }
 }

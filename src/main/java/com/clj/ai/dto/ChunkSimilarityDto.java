@@ -19,6 +19,16 @@ public class ChunkSimilarityDto {
     private Long documentId;
 
     /**
+     * 所属知识库ID
+     */
+    private Long knowledgeBaseId;
+
+    /**
+     * 所属知识库名称
+     */
+    private String knowledgeBaseName;
+
+    /**
      * 分块内容
      */
     private String content;

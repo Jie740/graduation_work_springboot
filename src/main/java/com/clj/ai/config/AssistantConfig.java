@@ -1,5 +1,7 @@
 package com.clj.ai.config;
 
+import com.clj.ai.service.AssistantService;
+import com.clj.ai.tool.RagSearchTool;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.*;
@@ -7,6 +9,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import dev.langchain4j.service.AiServices;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +20,7 @@ import static java.time.Duration.ofSeconds;
 @RequiredArgsConstructor
 public class AssistantConfig {
     private final EmbeddingProperties properties;
+
     @Bean
     public ChatModel openAiChatModel() {
         return OpenAiChatModel.builder()

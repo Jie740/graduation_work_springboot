@@ -33,7 +33,7 @@ public class AiRagChunk {
     /**
      * Chunk文本内容，用于语义检索和大模型上下文增强
      */
-    private String content;
+    private String text;
 
     /**
      * Chunk文本Token数量，用于统计文本长度及控制上下文大小
@@ -116,7 +116,7 @@ public class AiRagChunk {
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
             && (this.getDocumentId() == null ? other.getDocumentId() == null : this.getDocumentId().equals(other.getDocumentId()))
             && (this.getChunkIndex() == null ? other.getChunkIndex() == null : this.getChunkIndex().equals(other.getChunkIndex()))
-            && (this.getContent() == null ? other.getContent() == null : this.getContent().equals(other.getContent()))
+            && (this.getText() == null ? other.getText() == null : this.getText().equals(other.getText()))
             && (this.getTokenCount() == null ? other.getTokenCount() == null : this.getTokenCount().equals(other.getTokenCount()))
             && (this.getEmbedding() == null ? other.getEmbedding() == null : this.getEmbedding().equals(other.getEmbedding()))
             && (this.getEmbeddingModel() == null ? other.getEmbeddingModel() == null : this.getEmbeddingModel().equals(other.getEmbeddingModel()))
@@ -139,7 +139,7 @@ public class AiRagChunk {
         result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
         result = prime * result + ((getDocumentId() == null) ? 0 : getDocumentId().hashCode());
         result = prime * result + ((getChunkIndex() == null) ? 0 : getChunkIndex().hashCode());
-        result = prime * result + ((getContent() == null) ? 0 : getContent().hashCode());
+        result = prime * result + ((getText() == null) ? 0 : getText().hashCode());
         result = prime * result + ((getTokenCount() == null) ? 0 : getTokenCount().hashCode());
         result = prime * result + ((getEmbedding() == null) ? 0 : getEmbedding().hashCode());
         result = prime * result + ((getEmbeddingModel() == null) ? 0 : getEmbeddingModel().hashCode());
@@ -165,7 +165,7 @@ public class AiRagChunk {
         sb.append(", id=").append(id);
         sb.append(", documentId=").append(documentId);
         sb.append(", chunkIndex=").append(chunkIndex);
-        sb.append(", content=").append(content);
+        sb.append(", text=").append(text);
         sb.append(", tokenCount=").append(tokenCount);
         sb.append(", embedding=").append(embedding);
         sb.append(", embeddingModel=").append(embeddingModel);

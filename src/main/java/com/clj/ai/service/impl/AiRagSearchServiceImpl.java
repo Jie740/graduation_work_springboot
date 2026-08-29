@@ -1,18 +1,14 @@
 package com.clj.ai.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.clj.ai.domain.AiRagChunk;
+import com.clj.ai.dto.ChunkSimilarityDto;
 import com.clj.ai.dto.RagSearchRequestDto;
 import com.clj.ai.mapper.AiRagChunkMapper;
 import com.clj.ai.service.AiRagSearchService;
 import com.clj.ai.vo.RagSearchResultVo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pgvector.PGvector;
 import dev.langchain4j.data.embedding.Embedding;
-import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.store.embedding.EmbeddingMatch;
-import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
-import dev.langchain4j.store.embedding.EmbeddingSearchResult;
-import dev.langchain4j.store.embedding.EmbeddingStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,11 +16,12 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
  * RAG 向量检索服务实现
- * 使用 LangChain4j EmbeddingStore 进行向量检索
+ * 基于 ai_rag_chunk 表的 pgvector 余弦相似度检索
  */
 @Slf4j
 @Service
@@ -32,78 +29,81 @@ import java.util.stream.Collectors;
 public class AiRagSearchServiceImpl implements AiRagSearchService {
 
     private final EmbeddingModel embeddingModel;
-    private final EmbeddingStore<TextSegment> embeddingStore;
     private final AiRagChunkMapper chunkMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     public List<RagSearchResultVo> search(RagSearchRequestDto request) {
-        log.info("开始向量检索: knowledgeBaseId={}, query={}, topK={}, minScore={}",
-                request.getKnowledgeBaseId(), request.getQuery(), request.getTopK(), request.getMinScore());
+        // 合并单库与多库参数
+        List<Long> knowledgeBaseIds = resolveKnowledgeBaseIds(request);
+
+        log.info("开始向量检索: knowledgeBaseIds={}, query={}, topK={}, minScore={}",
+                knowledgeBaseIds, request.getQuery(), request.getTopK(), request.getMinScore());
 
         // 1. 将查询文本向量化
         Embedding queryEmbedding = embeddingModel.embed(request.getQuery()).content();
 
-        // 2. 使用 LangChain4j EmbeddingStore 进行检索
-        EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
-                .queryEmbedding(queryEmbedding)
-                .maxResults(request.getTopK())
-                .minScore(request.getMinScore())
-                .build();
+        // 2. 基于 pgvector 余弦相似度检索 ai_rag_chunk
+        List<ChunkSimilarityDto> similarChunks = chunkMapper.searchSimilar(
+                new PGvector(queryEmbedding.vector()),
+                request.getTopK(),
+                knowledgeBaseIds);
 
-        EmbeddingSearchResult<TextSegment> searchResult = embeddingStore.search(searchRequest);
-
-        // 3. 转换结果
+        log.info("检索个数: {}", similarChunks.size());
+        log.info("检索结果: {}", similarChunks.toString());
+        // 3. 转换结果并按最小相似度过滤
         List<RagSearchResultVo> results = new ArrayList<>();
-        for (EmbeddingMatch<TextSegment> match : searchResult.matches()) {
-            TextSegment segment = match.embedded();
-            Map<String, Object> metadata = segment != null ? segment.metadata().toMap() : Map.of();
-
-            // 直接从 metadata 获取 document_id 和 chunk_id（在保存时已写入）
-            Long documentId = getLongFromMetadata(metadata, "document_id");
-            Long chunkId = getLongFromMetadata(metadata, "chunk_id");
+        for (ChunkSimilarityDto chunk : similarChunks) {
+            if (chunk.getSimilarity() == null || chunk.getSimilarity() < request.getMinScore()) {
+                continue;
+            }
 
             RagSearchResultVo result = RagSearchResultVo.builder()
-                    .documentId(documentId)
-                    .chunkId(chunkId)
-                    .content(segment != null ? segment.text() : "")
-                    .score(match.score())
-                    .metadata(metadata)
+                    .documentId(chunk.getDocumentId())
+                    .chunkId(chunk.getId())
+                    .content(chunk.getContent())
+                    .knowledgeBaseId(chunk.getKnowledgeBaseId())
+                    .knowledgeBaseName(chunk.getKnowledgeBaseName())
+                    .score(chunk.getSimilarity())
+                    .metadata(parseMetadata(chunk.getMetadata()))
                     .build();
 
             results.add(result);
         }
+        log.info("转换结果: {}", results.toString());
 
         log.info("向量检索完成: 找到 {} 个结果", results.size());
         return results;
     }
 
-    private Long getLongFromMetadata(Map<String, Object> metadata, String key) {
-        Object value = metadata.get(key);
-        if (value == null) return null;
-        if (value instanceof Long) return (Long) value;
-        if (value instanceof Number) return ((Number) value).longValue();
-        if (value instanceof String) {
-            try {
-                return Long.parseLong((String) value);
-            } catch (NumberFormatException e) {
-                return null;
-            }
+    /**
+     * 合并 knowledgeBaseId（单库）与 knowledgeBaseIds（多库）参数
+     *
+     * @return 去重后的知识库ID列表；为空表示不限定知识库
+     */
+    private List<Long> resolveKnowledgeBaseIds(RagSearchRequestDto request) {
+        List<Long> ids = new ArrayList<>();
+        if (request.getKnowledgeBaseIds() != null) {
+            ids.addAll(request.getKnowledgeBaseIds());
         }
-        return null;
+        if (request.getKnowledgeBaseId() != null) {
+            ids.add(request.getKnowledgeBaseId());
+        }
+        return ids.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
     }
 
-    private Integer getIntegerFromMetadata(Map<String, Object> metadata, String key) {
-        Object value = metadata.get(key);
-        if (value == null) return null;
-        if (value instanceof Integer) return (Integer) value;
-        if (value instanceof Number) return ((Number) value).intValue();
-        if (value instanceof String) {
-            try {
-                return Integer.parseInt((String) value);
-            } catch (NumberFormatException e) {
-                return null;
-            }
+    /**
+     * 解析 metadata JSON 字符串为 Map
+     */
+    private Map<String, Object> parseMetadata(String metadata) {
+        if (metadata == null || metadata.isBlank()) {
+            return Map.of();
         }
-        return null;
+        try {
+            return objectMapper.readValue(metadata, Map.class);
+        } catch (Exception e) {
+            log.warn("解析 metadata 失败: {}", e.getMessage());
+            return Map.of();
+        }
     }
 }

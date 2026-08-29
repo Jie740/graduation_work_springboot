@@ -1,10 +1,12 @@
 package com.clj.ai.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.clj.ai.domain.AiKnowledgeBase;
 import com.clj.ai.domain.AiRagChunk;
 import com.clj.ai.domain.AiRagDocument;
 import com.clj.ai.mapper.AiRagChunkMapper;
 import com.clj.ai.mapper.AiRagDocumentMapper;
+import com.clj.ai.service.AiKnowledgeBaseService;
 import com.clj.ai.service.AiRagDocumentService;
 import com.clj.ai.service.AiRagIngestionService;
 import com.clj.ai.service.MinioService;
@@ -29,6 +31,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AiRagDocumentServiceImpl implements AiRagDocumentService {
 
+    private final AiKnowledgeBaseService aiKnowledgeBaseService;
     private final AiRagDocumentMapper documentMapper;
     private final AiRagChunkMapper chunkMapper;
     private final MinioService minioService;
@@ -43,7 +46,15 @@ public class AiRagDocumentServiceImpl implements AiRagDocumentService {
     private static final int STATUS_PENDING = 0;
 
     @Override
+    @Transactional
     public DocumentUploadResultVo uploadDocument(MultipartFile file, Long knowledgeBaseId) {
+//        先查询对应的知识库ID是否存在
+        boolean exists = aiKnowledgeBaseService.lambdaQuery()
+                .eq(AiKnowledgeBase::getId, knowledgeBaseId)
+                .exists();
+        if (!exists){
+            throw new BusinessException("知识库不存在");
+        }
         // 1. 校验文件
         validateFile(file);
 
@@ -85,6 +96,11 @@ public class AiRagDocumentServiceImpl implements AiRagDocumentService {
                 .set(AiRagDocument::getFileUrl, fileUrl);
         documentMapper.update(null, updateWrapper);
 
+//        更新对应知识库的文档数量
+        aiKnowledgeBaseService.lambdaUpdate()
+                .setSql("document_count=document_count+1")
+                .eq(AiKnowledgeBase::getId, knowledgeBaseId)
+                        .update();
         // 7. 异步处理文档
         ingestionService.processDocumentAsync(documentId);
 

@@ -32,6 +32,16 @@ public class RagSearchResultVo {
     private String content;
 
     /**
+     * 所属知识库ID
+     */
+    private Long knowledgeBaseId;
+
+    /**
+     * 所属知识库名称
+     */
+    private String knowledgeBaseName;
+
+    /**
      * 相似度得分
      */
     private Double score;
