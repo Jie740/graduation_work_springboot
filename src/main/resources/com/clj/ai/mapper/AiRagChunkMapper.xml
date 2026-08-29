@@ -60,10 +60,18 @@
         SELECT <include refid="Base_Column_List" />
         FROM ai_rag_chunk
         WHERE document_id = #{documentId}
+        AND is_active = true
+        AND is_deleted = false
         ORDER BY chunk_index
     </select>
 
     <delete id="deleteByDocumentId">
         DELETE FROM ai_rag_chunk WHERE document_id = #{documentId}
+    </delete>
+
+    <delete id="deleteInactiveByDocumentId">
+        DELETE FROM ai_rag_chunk
+        WHERE document_id = #{documentId}
+          AND is_active = false
     </delete>
 </mapper>

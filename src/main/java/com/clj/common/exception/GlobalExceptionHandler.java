@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,15 @@ public class GlobalExceptionHandler {
     public Result<Void> handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
         log.warn("权限不足 [{}]: {}", request.getRequestURI(), e.getMessage());
         return Result.fail(ResultCode.FORBIDDEN);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
+    public Result<Void> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException e,
+            HttpServletRequest request) {
+        log.warn("上传文件过大 [{}]: {}", request.getRequestURI(), e.getMessage());
+        return Result.fail(HttpStatus.PAYLOAD_TOO_LARGE.value(), "上传文件不能超过50MB");
     }
 
     /**

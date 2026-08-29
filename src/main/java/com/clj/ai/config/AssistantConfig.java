@@ -61,6 +61,7 @@ public class AssistantConfig {
                 .modelName(properties.getModelName())
                 .baseUrl(properties.getBaseUrl())
                 .dimensions(properties.getDimensions())
+                .maxSegmentsPerBatch(10) // 阿里云的最大分段数：介于 1~10
                 .timeout(ofSeconds(30))
                 .build();
     }

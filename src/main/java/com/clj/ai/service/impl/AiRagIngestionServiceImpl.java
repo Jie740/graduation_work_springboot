@@ -18,6 +18,8 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,13 +50,21 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
     private static final int STATUS_PROCESSING = 1;
     private static final int STATUS_SUCCESS = 3;
     private static final int STATUS_FAILED = 4;
+    private static final int MAX_SEGMENT_SIZE = 500;
+    private static final int SEGMENT_OVERLAP_SIZE = 50;
+    private static final int EMBEDDING_BATCH_SIZE = 10;
 
     /**
-     * 章节标题匹配模式：支持「第X章/节/部分」和「1」「3.1」等数字编号标题
+     * 章节标题匹配模式：支持 Markdown 标题、中文章节、数字章节和中文序号标题
      */
     private static final Pattern HEADING_PATTERN = Pattern.compile(
-            "^\\s*(第[一二三四五六七八九十百千0-9]+[章节部分]|[0-9]{1,2}(\\.[0-9]{1,2}){0,3}[ 　、.．].*)$",
+            "^\\s*(?:#{1,6}\\s+.+|第[一二三四五六七八九十百千万0-9]+[章节篇部分].*|"
+                    + "[0-9]{1,3}(?:\\.[0-9]{1,3}){0,4}[、.．)）\\s].*|"
+                    + "[一二三四五六七八九十]+[、.．)）\\s].*)$",
             Pattern.MULTILINE);
+
+    private record HeadingPosition(int offset, String title) {
+    }
 
     @Async
     @Override
@@ -68,8 +78,10 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
         }
 
         try {
-            // 更新状态为处理中
-            updateDocumentStatus(documentId, STATUS_PROCESSING, null);
+            if (!tryStartProcessing(documentId)) {
+                log.warn("文档正在处理中，跳过重复任务: documentId={}", documentId);
+                return;
+            }
 
             // 1. 从 MinIO 读取文档
             Document langChainDocument = loadDocument(document);
@@ -91,6 +103,7 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
 
         } catch (Exception e) {
             log.error("文档处理失败: documentId={}", documentId, e);
+            deactivateChunks(documentId);
             updateDocumentStatus(documentId, STATUS_FAILED, e.getMessage());
         }
     }
@@ -107,18 +120,22 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
         }
 
         try {
+            if (!tryStartProcessing(documentId)) {
+                log.warn("文档正在处理中，跳过重复索引任务: documentId={}", documentId);
+                return;
+            }
+
             // 1. 停用旧的 chunks
             deactivateChunks(documentId);
 
             // 2. 重新处理文档
-            updateDocumentStatus(documentId, STATUS_PROCESSING, null);
-
             Document langChainDocument = loadDocument(document);
             List<TextSegment> segments = splitDocument(langChainDocument, document);
             List<Embedding> embeddings = generateEmbeddings(segments);
             saveChunks(document, segments, embeddings);
 
             // 3. 更新状态
+            deleteInactiveChunks(documentId);
             updateDocumentStatus(documentId, STATUS_SUCCESS, null);
             updateChunkCount(documentId, segments.size());
 
@@ -126,6 +143,7 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
 
         } catch (Exception e) {
             log.error("文档重新索引失败: documentId={}", documentId, e);
+            deactivateChunks(documentId);
             updateDocumentStatus(documentId, STATUS_FAILED, e.getMessage());
         }
     }
@@ -151,6 +169,9 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
                 ""
         );
 
+        // 统一换行符，保留 \f 作为 PDF 页边界
+        text = text.replace("\r\n", "\n").replace('\r', '\n');
+
         // 多空格压缩
         text = text.replaceAll("[ \\t]+", " ");
 
@@ -167,18 +188,13 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
         try (InputStream inputStream =
                      minioService.readRagDocument(document.getObjectName())) {
 
-            ApacheTikaDocumentParser parser =
-                    new ApacheTikaDocumentParser();
+            if ("pdf".equalsIgnoreCase(document.getFileType())) {
+                return Document.from(cleanText(extractPdfText(inputStream)));
+            }
 
+            ApacheTikaDocumentParser parser = new ApacheTikaDocumentParser();
             Document doc = parser.parse(inputStream);
-
-            //数据清洗
-            String cleanedText = cleanText(doc.text());
-
-            return Document.from(
-                    cleanedText,
-                    doc.metadata()
-            );
+            return Document.from(cleanText(doc.text()), doc.metadata());
 
         } catch (Exception e) {
             throw new RuntimeException(
@@ -189,36 +205,64 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
     }
 
     /**
+     * 使用 PDFBox 保留 PDF 页边界，避免仅依赖 Tika 输出导致所有 chunk 都被标记为第 1 页。
+     */
+    private String extractPdfText(InputStream inputStream) throws Exception {
+        try (PDDocument pdfDocument = PDDocument.load(inputStream)) {
+            PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(true);
+            stripper.setPageEnd("\f");
+            return stripper.getText(pdfDocument);
+        }
+    }
+
+    /**
      * 使用 LangChain4j 切块
      */
     private List<TextSegment> splitDocument(Document document, AiRagDocument ragDocument) {
-        // 使用 RecursiveDocumentSplitter，maxSegmentSize=500 tokens, overlap=50 tokens
-        var splitter = DocumentSplitters.recursive(500, 50);
+        // 500 字符分块，保留 50 字符重叠，保证跨分块语义不丢失
+        var splitter = DocumentSplitters.recursive(MAX_SEGMENT_SIZE, SEGMENT_OVERLAP_SIZE);
 
-        List<TextSegment> segments = splitter.split(document);
+        List<TextSegment> segments = removeDuplicateSegments(splitter.split(document));
+        if (segments.isEmpty()) {
+            throw new IllegalArgumentException("文档解析后没有可用文本");
+        }
 
         // 全文用于定位每个 segment 的偏移，从而推算页码与所属章节
         String fullText = document.text();
         String documentTitle = extractTitle(document, ragDocument);
+        List<Integer> pageBreakOffsets = collectPageBreakOffsets(fullText);
+        List<HeadingPosition> headingPositions = collectHeadingPositions(fullText);
 
-        int searchFrom = 0;
+        int previousOffset = -1;
+        int previousLength = 0;
+        int pageBreakIndex = 0;
+        int headingIndex = 0;
+        String currentSection = "";
+
         // 为每个 segment 添加 metadata（页码、章节、标题、来源文件等）
         for (int i = 0; i < segments.size(); i++) {
             TextSegment segment = segments.get(i);
             Map<String, Object> metadata = new HashMap<>(segment.metadata().toMap());
 
-            // 定位 segment 在全文中的起始位置（考虑切块重叠，从上一位置向后查找）
-            int offset = fullText.indexOf(segment.text(), searchFrom);
-            if (offset < 0) {
-                offset = searchFrom;
+            // 允许从上一块内部开始查找，避免 overlap 导致定位失败。
+            int offset = locateSegment(fullText, segment.text(), previousOffset, previousLength);
+            if (offset < previousOffset) {
+                log.warn("分块定位出现回退: documentId={}, chunkIndex={}, offset={}, previousOffset={}",
+                        ragDocument.getId(), i, offset, previousOffset);
             }
-            searchFrom = offset;
 
-            // 页码：Tika 以 \f（换页符）分隔页面，统计之前的换页符数量 + 1
-            int pageNumber = countPages(fullText, offset);
+            while (pageBreakIndex < pageBreakOffsets.size()
+                    && pageBreakOffsets.get(pageBreakIndex) < offset) {
+                pageBreakIndex++;
+            }
+            int pageNumber = pageBreakIndex + 1;
 
-            // 章节标题：取该位置之前最近出现的标题行
-            String section = extractSection(fullText, offset);
+            while (headingIndex < headingPositions.size()
+                    && headingPositions.get(headingIndex).offset() <= offset) {
+                currentSection = headingPositions.get(headingIndex).title();
+                headingIndex++;
+            }
 
             metadata.put("document_id", ragDocument.getId());
             metadata.put("knowledge_base_id", ragDocument.getKnowledgeBaseId());
@@ -226,39 +270,92 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
             metadata.put("source", ragDocument.getObjectName());
             metadata.put("chunk_index", i);
             metadata.put("page_number", pageNumber);
-            metadata.put("section", section);
+            metadata.put("pageNum", pageNumber);
+            metadata.put("section", currentSection);
             metadata.put("title", documentTitle);
 
             segments.set(i, TextSegment.from(segment.text(), dev.langchain4j.data.document.Metadata.from(metadata)));
+            previousOffset = offset;
+            previousLength = segment.text().length();
         }
 
         return segments;
     }
 
     /**
-     * 统计 offset 之前的换页符数量，得到页码（从 1 开始）
+     * 去除切块器异常产生的完全重复块。保留首个块，避免同一文本重复调用 embedding 并重复入库。
      */
-    private int countPages(String fullText, int offset) {
-        int pages = 1;
-        for (int i = 0; i < offset && i < fullText.length(); i++) {
-            if (fullText.charAt(i) == '\f') {
-                pages++;
+    private List<TextSegment> removeDuplicateSegments(List<TextSegment> segments) {
+        Set<String> seen = new HashSet<>();
+        List<TextSegment> uniqueSegments = new ArrayList<>(segments.size());
+        int duplicateCount = 0;
+
+        for (TextSegment segment : segments) {
+            String fingerprint = normalizeForFingerprint(segment.text());
+            if (fingerprint.isBlank() || !seen.add(fingerprint)) {
+                duplicateCount++;
+                continue;
             }
+            uniqueSegments.add(segment);
         }
-        return pages;
+
+        if (duplicateCount > 0) {
+            log.warn("已移除重复文档分块: duplicateChunks={}", duplicateCount);
+        }
+        return uniqueSegments;
     }
 
     /**
-     * 提取 offset 之前最近出现的章节标题行
+     * 仅用于判断两个 chunk 是否为同一文本，忽略空白差异。
      */
-    private String extractSection(String fullText, int offset) {
-        String before = fullText.substring(0, Math.min(offset, fullText.length()));
-        Matcher matcher = HEADING_PATTERN.matcher(before);
-        String lastHeading = null;
-        while (matcher.find()) {
-            lastHeading = matcher.group().trim();
+    private String normalizeForFingerprint(String text) {
+        return text == null ? "" : text.replaceAll("\\s+", " ").trim();
+    }
+
+    private List<Integer> collectPageBreakOffsets(String fullText) {
+        List<Integer> offsets = new ArrayList<>();
+        for (int i = 0; i < fullText.length(); i++) {
+            if (fullText.charAt(i) == '\f') {
+                offsets.add(i);
+            }
         }
-        return lastHeading == null ? "" : lastHeading;
+        return offsets;
+    }
+
+    private List<HeadingPosition> collectHeadingPositions(String fullText) {
+        List<HeadingPosition> positions = new ArrayList<>();
+        Matcher matcher = HEADING_PATTERN.matcher(fullText);
+        while (matcher.find()) {
+            positions.add(new HeadingPosition(matcher.start(), matcher.group().trim()));
+        }
+        return positions;
+    }
+
+    /**
+     * 根据相邻分块的预期位置定位当前分块，支持 50 字符 overlap。
+     */
+    private int locateSegment(String fullText,
+                              String segmentText,
+                              int previousOffset,
+                              int previousLength) {
+        if (previousOffset < 0) {
+            int firstOffset = fullText.indexOf(segmentText);
+            return firstOffset >= 0 ? firstOffset : 0;
+        }
+
+        int minimumStart = Math.min(fullText.length(), previousOffset + 1);
+        int expectedStart = Math.max(
+                minimumStart,
+                previousOffset + Math.max(1, previousLength - SEGMENT_OVERLAP_SIZE)
+        );
+
+        int offset = fullText.indexOf(segmentText, expectedStart);
+        if (offset >= 0) {
+            return offset;
+        }
+
+        offset = fullText.indexOf(segmentText, minimumStart);
+        return offset >= 0 ? offset : expectedStart;
     }
 
     /**
@@ -283,7 +380,25 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
      * 生成向量
      */
     private List<Embedding> generateEmbeddings(List<TextSegment> segments) {
-        return embeddingModel.embedAll(segments).content();
+        List<Embedding> embeddings = new ArrayList<>(segments.size());
+
+        for (int from = 0; from < segments.size(); from += EMBEDDING_BATCH_SIZE) {
+            int to = Math.min(from + EMBEDDING_BATCH_SIZE, segments.size());
+            List<Embedding> batchEmbeddings =
+                    embeddingModel.embedAll(segments.subList(from, to)).content();
+
+            if (batchEmbeddings == null || batchEmbeddings.size() != to - from) {
+                throw new IllegalStateException(String.format(
+                        "向量数量与分块数量不一致: chunks=%d, embeddings=%d",
+                        to - from,
+                        batchEmbeddings == null ? 0 : batchEmbeddings.size()));
+            }
+
+            embeddings.addAll(batchEmbeddings);
+            log.info("文档向量化进度: {}/{}", to, segments.size());
+        }
+
+        return embeddings;
     }
 
     /**
@@ -291,6 +406,10 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveChunks(AiRagDocument document, List<TextSegment> segments, List<Embedding> embeddings) {
+        if (segments.size() != embeddings.size()) {
+            throw new IllegalArgumentException("分块数量与向量数量不一致，取消入库");
+        }
+
         for (int i = 0; i < segments.size(); i++) {
             TextSegment segment = segments.get(i);
             Embedding embedding = embeddings.get(i);
@@ -332,6 +451,23 @@ public class AiRagIngestionServiceImpl implements AiRagIngestionService {
                 .set(AiRagChunk::getIsActive, false)
                 .set(AiRagChunk::getUptim, new Date());
         chunkMapper.update(null, updateWrapper);
+    }
+
+    private void deleteInactiveChunks(Long documentId) {
+        chunkMapper.deleteInactiveByDocumentId(documentId);
+    }
+
+    /**
+     * 原子抢占文档处理任务，避免同一文档被多个异步任务同时切块和入库。
+     */
+    private boolean tryStartProcessing(Long documentId) {
+        LambdaUpdateWrapper<AiRagDocument> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(AiRagDocument::getId, documentId)
+                .ne(AiRagDocument::getProcessStatus, STATUS_PROCESSING)
+                .set(AiRagDocument::getProcessStatus, STATUS_PROCESSING)
+                .set(AiRagDocument::getProcessMessage, null)
+                .set(AiRagDocument::getUptim, new Date());
+        return documentMapper.update(null, updateWrapper) > 0;
     }
 
     /**

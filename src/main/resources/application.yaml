@@ -22,10 +22,14 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
 
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
 
 mybatis-plus:
   configuration:
     # 开启驼峰命名转换：下划线命名自动转驼峰命名
     map-underscore-to-camel-case: true
-
 

@@ -36,4 +36,9 @@ public interface AiRagChunkMapper extends BaseMapper<AiRagChunk> {
      * 物理删除指定文档的所有分块
      */
     int deleteByDocumentId(@Param("documentId") Long documentId);
+
+    /**
+     * 删除指定文档重建索引后遗留的失效分块
+     */
+    int deleteInactiveByDocumentId(@Param("documentId") Long documentId);
 }

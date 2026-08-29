@@ -1,6 +1,7 @@
 package com.clj.security.config;
 
 import com.clj.security.filter.JwtAuthenticationFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.config.Customizer;
 import org.springframework.context.annotation.Bean;
@@ -55,6 +56,7 @@ public class SecurityConfig {
 
                 // URL 权限配置
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         // CORS 预检请求放行
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // 登录、登出、验证码、Swagger 文档放行
